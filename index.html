@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Database Systems (H) — Flashcards</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper:#f5f0e8;--paper2:#ede7d9;--ink:#1a1612;--ink2:#4a3f35;
+  --ink3:#9a8e82;--rule:#d4c9b8;--pop:#1e5fc9;
+  --answer-bg:#e8eef8;--answer-ink:#1a2e4a;--answer-rule:#b0c9e8;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{
+  background:var(--paper);color:var(--ink);font-family:'DM Sans',sans-serif;
+  min-height:100dvh;display:flex;flex-direction:column;
+  background-image:repeating-linear-gradient(to bottom,transparent,transparent 27px,var(--rule) 27px,var(--rule) 28px);
+  background-attachment:fixed;
+}
+.topbar{
+  background:var(--ink);color:var(--paper);padding:10px 24px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:10;
+}
+.topbar-title{font-family:'DM Serif Display',serif;font-size:1.15rem;}
+.topbar-title em{font-style:italic;color:#c8b99a;}
+.topbar-counter{font-family:'DM Mono',monospace;font-size:0.7rem;color:#9a8e82;letter-spacing:0.08em;}
+.topbar-counter span{color:#f5f0e8;}
+.unit-strip{
+  background:var(--paper2);border-bottom:1px solid var(--rule);
+  padding:0 16px;display:flex;overflow-x:auto;
+  scrollbar-width:none;-webkit-overflow-scrolling:touch;
+}
+.unit-strip::-webkit-scrollbar{display:none;}
+.unit-tab{
+  flex-shrink:0;padding:10px 16px;font-family:'DM Mono',monospace;
+  font-size:0.72rem;letter-spacing:0.06em;color:var(--ink3);
+  background:transparent;border:none;border-bottom:2px solid transparent;
+  cursor:pointer;transition:color 0.12s,border-color 0.12s;white-space:nowrap;
+}
+.unit-tab:hover{color:var(--ink);}
+.unit-tab.active{color:var(--pop);border-bottom-color:var(--pop);font-weight:500;}
+.main{
+  flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;padding:32px 24px 24px;gap:20px;
+}
+.progress-bar{width:100%;max-width:600px;height:2px;background:var(--rule);border-radius:1px;overflow:hidden;}
+.progress-fill{height:100%;background:var(--pop);transition:width 0.3s ease;}
+.card-scene{width:100%;max-width:600px;perspective:1400px;cursor:pointer;}
+.card{
+  position:relative;width:100%;min-height:300px;
+  transform-style:preserve-3d;transition:transform 0.55s cubic-bezier(0.35,0,0.25,1);border-radius:3px;
+}
+.card.flipped{transform:rotateY(180deg);}
+.card-face{
+  position:absolute;inset:0;border-radius:3px;
+  backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  display:flex;flex-direction:column;padding:28px 32px;min-height:300px;
+  border:1px solid var(--rule);box-shadow:0 4px 18px rgba(26,22,18,0.10);
+}
+.card-front{background:#fff;}
+.card-back{background:var(--answer-bg);transform:rotateY(180deg);border-color:var(--answer-rule);}
+.card-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--rule);
+}
+.card-back .card-header{border-bottom-color:var(--answer-rule);}
+.card-type{font-family:'DM Mono',monospace;font-size:0.6rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink3);}
+.card-back .card-type{color:#4a7ac9;}
+.card-unit{font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--ink3);background:var(--paper2);padding:3px 8px;border-radius:2px;}
+.card-back .card-unit{background:#cad8ed;color:var(--answer-ink);}
+.card-body{flex:1;display:flex;align-items:center;justify-content:center;padding:6px 0 18px;}
+.card-text{font-family:'DM Sans',sans-serif;font-size:clamp(0.8rem,2.2vw,0.97rem);line-height:1.72;text-align:center;color:var(--ink);word-break:break-word;}
+.card-back .card-text{color:var(--answer-ink);font-size:clamp(0.75rem,2vw,0.9rem);text-align:left;}
+.card-mark{font-family:'DM Serif Display',serif;font-style:italic;font-size:3.5rem;line-height:1;color:var(--rule);position:absolute;bottom:14px;right:22px;user-select:none;}
+.card-back .card-mark{color:var(--answer-rule);}
+.card-hint{font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--ink3);text-align:center;letter-spacing:0.04em;}
+.nav{display:flex;align-items:center;gap:10px;width:100%;max-width:600px;}
+.nav-btn{
+  width:44px;height:44px;border-radius:2px;border:1px solid var(--rule);
+  background:#fff;color:var(--ink2);font-size:1rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all 0.12s;flex-shrink:0;-webkit-tap-highlight-color:transparent;
+}
+.nav-btn:hover{background:var(--ink);color:var(--paper);border-color:var(--ink);}
+.nav-btn:active{transform:scale(0.93);}
+.flip-btn{
+  flex:1;height:44px;border-radius:2px;border:1px solid var(--ink);
+  background:var(--ink);color:var(--paper);font-family:'DM Serif Display',serif;
+  font-style:italic;font-size:1rem;cursor:pointer;transition:all 0.12s;
+  -webkit-tap-highlight-color:transparent;
+}
+.flip-btn:hover{background:var(--pop);border-color:var(--pop);}
+.flip-btn:active{transform:scale(0.98);}
+.swipe-hint{font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--ink3);letter-spacing:0.06em;}
+@keyframes fromRight{from{opacity:0;transform:translateX(28px)}to{opacity:1;transform:translateX(0)}}
+@keyframes fromLeft{from{opacity:0;transform:translateX(-28px)}to{opacity:1;transform:translateX(0)}}
+.slide-right .card{animation:fromRight 0.22s ease;}
+.slide-left .card{animation:fromLeft 0.22s ease;}
+@media(max-width:480px){.card-face{padding:18px 18px}.main{padding:18px 12px 14px}.topbar{padding:10px 14px}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="topbar-title">Database Systems <em>(H) Flashcards</em></div>
+  <div class="topbar-counter" id="topCounter">---</div>
+</div>
+<div class="unit-strip" id="unitStrip"></div>
+<div class="main" id="main"></div>
+<script>
+const UNITS=[
+  {id:'all',label:'All Cards'},
+  {id:'RelModel',label:'Relational Model'},
+  {id:'Constraints',label:'Constraints & Keys'},
+  {id:'FuncDep',label:'Functional Dependencies'},
+  {id:'Normalisation',label:'Normalisation'},
+  {id:'SQL',label:'SQL Basics'},
+  {id:'AdvSQL',label:'Advanced SQL & Analytics'},
+  {id:'PhysDesign',label:'Physical Design & Hashing'},
+  {id:'Indexing1',label:'Indexing Part I'},
+  {id:'Indexing2',label:'Indexing Part II (B+ Trees)'},
+  {id:'QueryProc',label:'Query Processing'},
+  {id:'QueryOpt1',label:'Query Optimisation I'},
+  {id:'QueryOpt2',label:'Query Optimisation II'},
+];
+
+const ALL_CARDS=[
+{u:'RelModel',q:'Why do we need databases? Core observations and idea.',
+a:'Observation 1: Human activity is data-driven - we make decisions, proceed with actions, and reason based on observed data. Observation 2: We are limited in storing all data in memory and recalling it. Idea: Define a robust base that can store humongous data, update and delete data, and recall/search data efficiently. Real examples: Google (web search), UCI ML Repository (data mining, multidimensional data), MEDLINE (scientific/medical - drug discovery, health monitoring, virus analytics), Amazon (customer profiles, products, preferences). A DMS provides: data modelling, data access (query/insert/delete/update), data analysis, physical storage, security, failure recovery, and query optimisation.'},
+
+{u:'RelModel',q:'DMS architecture - the declarative box model with internal components',
+a:'A DMS is a box with an interface for users/applications. SQL (declarative) goes in, the DMS computes the optimal HOW, result comes out. Declarative means: we tell the database WHAT we want, not HOW to do it. Internal architecture: Users/Apps -> Application (DB Connector) -> Parser -> Optimizer -> Processing Algorithms -> Code Generator -> SQL -> Database System -> Operating System -> Data Files (CPU, Memory, Data File Blocks). Three families of data: Structured (well-defined structure, e.g. tables, 3 Kg where 3=datum, Kg=metadata). Unstructured (web pages, texts, sensor measurements - less interpretation info, high entropy). Semi-structured (XML or JSON - self-descriptive, medium entropy, e.g. data type=real unit=Kg 3 /data). Modern DMSs manage ALL families.'},
+
+{u:'RelModel',q:'Relational Model - inventor, date, award, key paper, and comparison to ER',
+a:'Inventor: Dr Edgar F. Codd (1923-2003), IBM Research. Paper: "A Relational Model for Large Shared Data Banks", Communications of the ACM, June 1970. Award: ACM Turing Award, 1981. Turing Award quote: "relational model provides a sharp and clear boundary between the logical and the physical aspects of database management." Mathematical foundation: relational algebra, set theory, functional dependency theory. GUARANTEES query optimisation. Compare: Peter Chen (1947) invented Entity-Relationship Modelling in 1976 - does NOT guarantee optimality. ER is conceptual/visual; Relational is mathematical. Informally: any entity may relate with any other when they share common attributes.'},
+
+{u:'RelModel',q:'Relational model formalism - schema, domain, tuple, instance, NULL',
+a:'Schema: R(A1, A2, ..., An) - relation named R with ordered set of attributes. Each Ai takes values in domain Di (Ai is an element of Di). Example BankAccount(#account, name, balance, status): #account is a natural number N, name is Varchar(50), balance is a real number R, status is in {active, inactive}. Tuple t: ordered set t=(v1,v2,...,vn) where vi is in Di. Also written t[account]=1234567, t[name]="Thomas C". Instance r(R): a SET of tuples r(R)={t1,t2,...,tm}. NULL: represents unknown, inapplicable, uncertain, or missing value - multiple interpretations exist. Relational Database Schema S={R1,R2,...,Rk} is a set of relations.'},
+
+{u:'RelModel',q:'Company schema - full entity list, relationships, and schema notation',
+a:'Entities: Employee, Department, Project, Dependent. Full schema: EMPLOYEE(SSN, Fname, Minit, Lname, Bdate, Address, Sex, Salary, Super_SSN, Dno). DEPARTMENT(Dname, Dnumber, Mgr_SSN, Mgr_Start_Date). DEPT_LOCATIONS(Dnumber, Dlocation). PROJECT(Pname, Pnumber, Plocation, Dnum). WORKS_ON(ESSN, PNO, Hours). DEPENDENT(ESSN, Dependent_name, Sex, Bdate, Relationship). Relationships: employee manages one department (track start date); department has multiple locations; department controls projects; employee assigned to one department but may work on many projects (hours/week tracked); employee supervised by another employee; employee has dependents (son/daughter etc.). Exam tasks: (1) Mail card to John supervisor son - requires 3-way join on EMPLOYEE twice + DEPENDENT. (2) Hours worked by Alicia supervisor - requires EMPLOYEE twice + WORKS_ON + PROJECT.'},
+
+{u:'Constraints',q:'Three fundamental relational constraints - complete definitions',
+a:'1. KEY CONSTRAINT: superkey uniquely identifies any tuple. For distinct t1 != t2 in r(R): t1[SK] != t2[SK]. Lemma: if K is a superkey, any superset of K is also a superkey. 2. ENTITY INTEGRITY CONSTRAINT (Codd 1970): primary key CANNOT be NULL in any tuple. t[PK] != NULL for all t in r(R). If PK is composite, NULL not allowed in ANY of its attributes. 3. REFERENTIAL INTEGRITY CONSTRAINT (Codd 1970): FK in referencing relation R1 must either equal a PK value in referenced R2, or be NULL (only if FK is not part of R1 own PK). Notation: directed arc from R1.FK to R2.PK. Must hold on ALL instances at ALL times. Operations may propagate (CASCADE) to maintain integrity - the database moves between consistent states.'},
+
+{u:'Constraints',q:'Superkey, candidate key, primary key - exact formal definitions with examples',
+a:'SUPERKEY (SK): any set of attributes that uniquely identifies a tuple. For any t1 != t2: t1[SK] != t2[SK]. Lemma: if K is SK, any superset of K is also SK. CANDIDATE KEY (CK): the MINIMAL superkey. K is CK iff for every Ai in K, K minus {Ai} is NOT a superkey. Removing ANY single attribute breaks uniqueness. PRIMARY KEY (PK): one chosen CK (underlined in schema notation). SECONDARY KEYS: remaining CKs. Example - Car(LicenceNumber, EngineSerialNumber, Colour, Make): K1={LicenceNumber} and K2={EngineSerialNumber} are both CKs. A={LicenceNumber,EngineSerialNumber} is a superkey but NOT a CK because A minus {LicenceNumber}=K2 is still a SK. KEY LESSON: a composite set containing unique attributes is not necessarily a candidate key.'},
+
+{u:'Constraints',q:'Referential integrity - full rule, FK can be NULL, notation',
+a:'Referencing relation R1, Referenced relation R2. FK in R1 must either: (a) equal the PK value in some tuple of R2, or (b) be NULL - provided FK is not part of R1 own PK. Formal: t1[FK] references t2[PK] means t1[FK]=t2[PK] OR t1[FK]=NULL. Notation: directed arc from R1.FK to R2.PK. Example Reader-Book: Reader(ID, Name, Age, ISBN_FK) where ISBN_FK references Book(ISBN, Title, Subject, Pages). ISBN in Reader must match existing ISBN in Book, or be NULL (reader with no book). NULL FK means the relationship simply does not exist for that tuple. From company schema: EMPLOYEE.Dno references DEPARTMENT.Dnumber. EMPLOYEE.Super_SSN references EMPLOYEE.SSN (self-referencing). DEPARTMENT.Mgr_SSN references EMPLOYEE.SSN.'},
+
+{u:'Constraints',q:'INSERT violations - all four types with examples',
+a:'1. DOMAIN violation: attribute value not in domain. E.g. age="Chris" - string where integer expected. 2. KEY violation: key value of new tuple already exists. E.g. inserting employee with same SSN as existing employee. Must search before inserting. 3. REFERENTIAL INTEGRITY violation: FK references a PK that does not exist. E.g. employee assigned to non-existent department (Dno=999 but no such department). Must search referenced relation first. 4. ENTITY INTEGRITY violation: PK is NULL. E.g. SSN is missing. All four must be checked on every INSERT. If violation detected, options: REJECT/ABORT (cancel the operation), inform user, trigger additional operations, or execute user-specified error-correction procedure.'},
+
+{u:'Constraints',q:'DELETE violations - options and cascade effects with company example',
+a:'DELETE may ONLY violate REFERENTIAL INTEGRITY: we delete a PK value that is referenced by FKs in other relations. Example: delete employee who is (a) supervisor of 4 employees (Super_SSN references) and (b) manager of a department (Mgr_SSN reference). Both FK references would be broken. Options when violation detected: (1) CASCADE: automatically delete all referencing tuples too. (2) SET NULL: set referencing FKs to NULL (if FK not part of PK). (3) SET DEFAULT: set to declared default value. (4) REJECT/ABORT: refuse the deletion. SQL declaration: ON DELETE CASCADE, ON DELETE SET NULL, ON DELETE SET DEFAULT. In-class quiz: What happens when we delete a department? - employees in that dept: Dno becomes default/null/cascade. What happens when we delete an employee? - their supervised employees: Super_SSN set null/cascade, department they manage: Mgr_SSN set null/cascade.'},
+
+{u:'Constraints',q:'UPDATE violations - PK updates vs FK updates with in-class example',
+a:'Updating PK: (1) may cause key constraint violation (duplicate PKs). (2) may break referential integrity (dangling FKs in other tables). Updating FK: may violate referential integrity if new FK value does not exist as PK in referenced relation. In-class quiz example with schema Enrolment(StudentID,CourseID), Course(CourseID,Description), Instructor(StaffName,CourseID), Grade(StudentID,CourseID,Grade): Updating CourseID A2 to A6 requires updating: Course(1 row), Enrolment(2 rows), Instructor(3 rows), Grade(3 rows) = 9 total updates across 4 tables. Updating A2 to A3: violates key constraint if A3 already exists. Could we insert (Chris, A4) into Instructor? Violates referential integrity if A4 does not exist in Course table. ON UPDATE CASCADE propagates the PK change to all referencing FKs automatically.'},
+
+{u:'Constraints',q:'Semantic integrity constraints - beyond the relational model',
+a:'Semantic constraints are based on application semantics and CANNOT be expressed by the standard relational model. Examples from slides: max 56 hours/week per employee across all projects; each department controls 2-5 projects per year; each department has up to 100 employees. Solutions needed: (1) Description Logics and high-order logic languages (generally depart from first-order predicate logic used by AI/Prolog). (2) Semantic Databases and Semantic Web (XML). Key researcher: Sir Timothy John Berners-Lee (Semantic Web, 2000). Workshop: http://dl.kr.org/. These require a separate constraint specification language because relational algebra cannot express them. Contrast: key, entity, and referential constraints CAN be expressed and enforced by the relational model directly.'},
+
+{u:'FuncDep',q:'Functional Dependency - formal definition and EMP_PROJ examples',
+a:'FD is a formal metric of goodness of a relational schema (Codd 1970). "Given a relation, attribute X functionally determines attribute Y if a value of X determines a unique value for Y." Notation: X -> Y. Formal definition: for any two tuples t1, t2 in r(R): if t1[X]=t2[X] then t1[Y]=t2[Y]. An FD is a CONSTRAINT on ALL instances of R - must hold for every possible instance. Example EMP_PROJ(SSN, Pnumber, Hours, Ename, Pname, Plocation): FD1: SSN -> Ename (knowing SSN tells you employee name). FD2: Pnumber -> {Pname, Plocation} (knowing project number tells you name and location). FD3: {SSN, Pnumber} -> Hours (need both to determine hours per week). Lemma 1: if K is a candidate key, K -> {R} (determines ALL attributes). Candidate key is the "minimum sufficient statistic that discriminates any pair of tuples."'},
+
+{u:'FuncDep',q:'Armstrong inference rules, derived rules, and the FALSE rule',
+a:'ARMSTRONG 1974 - three axioms: (1) Reflexive: if Y is a subset of X then X -> Y. Example: {SSN,Ename} -> SSN and {SSN,Ename} -> Ename. (2) Augmentation: if X -> Y then X union {Z} -> Y union {Z}. (3) Transitive: if X -> Y and Y -> Z then X -> Z. DERIVED RULES: Decomposition: if X -> {Y,Z} then X -> Y AND X -> Z. Example: SSN -> {Name,Salary} means SSN -> Name and SSN -> Salary. Additive/Union: if X -> Y and X -> Z then X -> {Y,Z} (inverse of decomposition). FALSE RULE (exam trap - "Chris rule"): {X,Y} -> Z does NOT imply X -> Z or Y -> Z independently. Augmentation is NOT a shortcut for this. Armstrong rules are sound (produce only valid FDs) and complete (can derive all valid FDs).'},
+
+{u:'FuncDep',q:'Finding candidate keys from FDs - complete worked example R(B,O,I,S,Q,D)',
+a:'Relation R(B,O,I,S,Q,D) with: FD1:S->D, FD2:I->B, FD3:{I,S}->Q, FD4:B->O. TEST {I,S}: (1) {I,S}->Q by FD3. (2) I->B by FD2. B->O by FD4. So I->O by transitivity. Therefore I->{B,O}. (3) S->D by FD1. (4) {I,S}->{B,O,I,S,Q,D} = ALL attributes. Is it minimal? Remove I: {S}->D only - cannot derive B,O,Q,I. Remove S: {I}->{B,O} - cannot derive D,Q,S. YES, {I,S} IS a candidate key. TEST {I,B}: I->B->O so I->{B,O}. But D,Q,S are not dependent on {I,B}. NOT a candidate key. TEST {B,O}: neither B alone nor O alone can determine the others. NOT a candidate key. KEY INSIGHT: candidate key = minimum sufficient statistic that discriminates any pair of tuples.'},
+
+{u:'FuncDep',q:'Four guidelines for good relational design',
+a:'GUIDELINE 1: Attributes of a relation should make sense. Attributes of different entities should NOT be in the same relation. Minimize similarity between relations. Relationships represented ONLY through FK/PK pairs. Example: WORKS_ON(SSN_FK, PNO_FK, Hours) correctly separates entity info from the relationship. GUIDELINE 2: Avoid redundant tuples (repetition of same information). Impact: storage waste, inconsistency costs, operation anomalies - replicas must be kept consistent during every insert/delete/update. GUIDELINE 3: Relations should have as few NULL values as possible. Reasons for NULL: not applicable, unknown, known to exist but unavailable. Fix: if Phone3 has 99.37% NULLs (1590/1600 employees), create separate 3rdPhone(SSN, Phone3). GUIDELINE 4: Design relations to avoid fictitious tuples after joins. Bad decomposition attribute creates phantom tuples - a theory is imperative!'},
+
+{u:'FuncDep',q:'Update, delete, insert anomalies - full EMP_PROJ example',
+a:'EMP_PROJ(SSN, Pnumber, Hours, Ename, Pname, Plocation) - bad design mixing Employee and Project data. UPDATE anomaly: 600 employees work on Project 2 "ProductY". Renaming to "ProductZ" requires updating ALL 600 tuples. Miss even one -> inconsistent state where some employees appear to work on non-existent project. DELETE anomaly: deleting Project 2 -> ALL tuples for employees working on Project 2 are deleted -> employee data is lost. INSERT anomaly: cannot add a project without assigning at least one employee (composite PK requires both SSN and Pnumber). CAUSE: storing data about multiple distinct entities (Employee and Project) in one relation. FD theory QUANTIFIES why this is bad. Normalisation FIXES it by decomposing into smaller relations.'},
+
+{u:'FuncDep',q:'Fictitious (spurious) tuples - concrete worked example with proof',
+a:'R(SSN, Pname, Plocation, Hours). Split on Plocation into Q(SSN,Pname,Plocation) and P(Hours,Plocation). Original: r1=(111,PR1,Glasgow,20), r2=(222,PR1,Glasgow,10), r3=(333,PR2,Edinburgh,23). Q: q1=(111,PR1,Glasgow), q2=(222,PR1,Glasgow), q3=(333,PR2,Edinburgh). P: p1=(20,Glasgow), p2=(10,Glasgow), p3=(23,Edinburgh). Join Q ⋈ P on Plocation: q1+p1=(111,PR1,Glasgow,20) CORRECT. q1+p2=(111,PR1,Glasgow,10) FICTITIOUS - 111 works 10 hours was never in original. q2+p1=(222,PR1,Glasgow,20) FICTITIOUS - 222 works 20 hours was never in original. q2+p2=(222,PR1,Glasgow,10) correct. q3+p3=(333,PR2,Edinburgh,23) correct. TWO fictitious tuples generated. Plocation was a BAD choice of splitting attribute. Theory (BCNF) tells us the CORRECT splitting attribute.'},
+
+{u:'Normalisation',q:'Normalisation theory overview - algorithm and terminology',
+a:'Progressive decomposition of unsatisfactory (bad) relations into smaller good relations by breaking up attributes. Degree of decomposition = Normal Form (NF). Forms in order: 1NF -> 2NF -> 3NF -> BCNF -> 4NF -> 5NF -> 6NF. ALGORITHM: (1) Assert which FDs exist among attributes (no other semantics required). (2) Pool all asserted FDs. (3) Create a universal big relation with ALL attributes. (4) Recursively decompose based on FDs such that joining back guarantees no information loss and no fictitious tuples. KEY TERMS: Prime attribute = belongs to AT LEAST ONE candidate key. Non-prime attribute = NOT a member of any candidate key. Example EMP_PROJ with PK={SSN,Pnumber}: SSN and Pnumber are PRIME. Hours, Ename, Pname, Plocation are NON-PRIME. Challenge: find the basic relations that reconstruct entire information efficiently while avoiding redundancy and fictitious tuples.'},
+
+{u:'Normalisation',q:'First Normal Form (1NF) - definition, violations, and fixes',
+a:'DEFINITION: the domain Di of each attribute Ai refers ONLY to atomic (simple, indivisible) values. 1NF DISALLOWS: (1) Nested attributes: attribute value is itself a relation (table within table). (2) Multivalued attributes: one tuple cell holds multiple values. EXAMPLE VIOLATIONS: Phone = {0141-xxx, 0131-xxx} in a single cell (multivalued). Address = {Street, City, Postcode} as composite nested attribute. FIXES: Multivalued attribute -> create separate relation EMPLOYEE_PHONE(SSN, Phone) with one row per phone number. Nested attribute -> create separate attributes (Street, City, Postcode) or separate relation. IMPORTANT: a relation in 1NF CAN still have redundant/repeated values. That is handled by 2NF and 3NF. 1NF is the foundation: ALL higher normal forms assume the relation is first in 1NF.'},
+
+{u:'Normalisation',q:'Second Normal Form (2NF) - full vs partial FD, definition, methodology',
+a:'FULL FD: X -> Y is FULL if removing ANY attribute from X means X no longer determines Y. Formally for all Ai in X: X minus {Ai} -> Y does NOT hold. Example: {SSN,Pnumber}->Hours is FULL (neither SSN alone nor Pnumber alone determines Hours). PARTIAL FD: {SSN,Pnumber}->Ename is PARTIAL because SSN->Ename holds (Pnumber is verbose/unnecessary). DEFINITION: R is in 2NF if every NON-PRIME attribute A in R is FULLY functionally dependent on the PK. Only relevant when PK is composite. Single-attribute PK: automatically 2NF. METHODOLOGY: (1) identify all partial FDs. (2) for each partial FD, create new relation where the partial key becomes PK and all non-prime attributes dependent only on it move there. (3) original relation keeps only full FDs. Result: all relations in 2NF.'},
+
+{u:'Normalisation',q:'2NF decomposition - full worked example EMP_PROJ',
+a:'EMP_PROJ(SSN, Pnumber, Hours, Ename, Pname, Plocation). PK={SSN,Pnumber}. FD1: {SSN,Pnumber}->Hours - FULL FD (both needed). FD2: SSN->Ename - PARTIAL (Pnumber unnecessary). FD3: Pnumber->{Pname,Plocation} - PARTIAL (SSN unnecessary). DECOMPOSE into 3 relations: EP1(SSN, Pnumber, Hours): PK={SSN,Pnumber}, keeps FD1. Now in 2NF. EP2(SSN, Ename): PK=SSN, keeps FD2. Now in 2NF. EP3(Pnumber, Pname, Plocation): PK=Pnumber, keeps FD3. Now in 2NF. FK LINKS: EP1.SSN -> EP2.SSN. EP1.Pnumber -> EP3.Pnumber. Each non-prime attribute fully depends on its own relation PK. Fix: Ename no longer repeated for every project an employee works on (FD2 was causing update anomaly).'},
+
+{u:'Normalisation',q:'Third Normal Form (3NF) - transitive dependency definition and identification',
+a:'TRANSITIVE FD: given PK X and non-prime attributes Y and Z: if X->Z (direct) and Z->Y, then Y is transitively dependent on PK X via non-prime Z. Pattern: X->Z->Y where Z is non-prime. Problem ONLY when Z is non-prime. DEFINITION: R is in 3NF (already in 2NF) if there is NO non-prime attribute that is transitively dependent on the PK. All non-prime attributes must directly depend on every candidate key. EMP_DEPT(SSN, Ename, Bdate, Address, Dnumber, Dname, Dmgr_Ssn): SSN->Dnumber (DIRECT, non-transitive). Dnumber->Dname (Dnumber is non-prime!) so SSN->Dname is TRANSITIVE. Dnumber->Dmgr_Ssn (same) so SSN->Dmgr_Ssn is TRANSITIVE. SSN->Ename: is there Z where SSN->Z->Ename? No. NOT transitive. SSN->Address: NOT transitive. SSN->Bdate: NOT transitive.'},
+
+{u:'Normalisation',q:'3NF decomposition - methodology, worked example, and generalised 3NF',
+a:'METHODOLOGY: split on the non-prime transitive attribute Z. Z becomes PK of new relation and FK in original. EMP_DEPT example (Z=Dnumber): ED1(SSN, Ename, Bdate, Address, Dnumber): PK=SSN, Dnumber is FK->ED2. ED2(Dnumber, Dname, Dmgr_Ssn): PK=Dnumber. RESULT: ED2 stores department info ONCE per department (not once per employee). Example from slides: 7 employees all in Dno=3 SoCS -> before: Dname and Dmgr repeated 5 times. After: stored once in ED2. GENERALISED 3NF: if Z is a CANDIDATE KEY (prime attribute), NO violation! Example EMPLOYEE(SSN, PassportNo, Salary): SSN->PassportNo and PassportNo->Salary but PassportNo is a CK -> no 3NF violation because PassportNo is not a non-prime transitive attribute. Every non-prime attribute must be (1) fully functionally dependent and (2) non-transitively dependent on every candidate key.'},
+
+{u:'Normalisation',q:'BCNF - definition, example, and comparison to 3NF',
+a:'BCNF: more strict than 3NF - handles prime attributes too. DEFINITION: R is in BCNF iff whenever a FD X->A holds in R, X must be a SUPERKEY of R (candidate key or primary key). The LHS of every non-trivial FD must be a superkey. Example TEACH(Student, Course, Instructor): PK={Student,Course}. FD1: {Student,Course}->Instructor. FD2: Instructor->Course (each instructor teaches only one course). In 3NF? YES - there is no transitive dependency of a non-prime on the PK via a non-prime. In BCNF? NO - in FD2, Instructor is NOT a superkey of TEACH. BCNF catches this. More general: A B C with PK={A,B}. FD1: {A,B}->C (fine). FD2: C->B. C is not a key -> BCNF violation. 3NF does not catch this because B is prime (part of PK). KEY INSIGHT: BCNF is strictly stronger than 3NF.'},
+
+{u:'Normalisation',q:'BCNF Decomposition Theorem - algorithm, TEACH example, and optimal split',
+a:'THEOREM (Zaniolo, ACM TODS 7(3), 1982): Let R not be in BCNF, let X->A be the violating FD (X is not a superkey). Decompose into: R1 = R minus {A} (all attributes except A). R2 = {X} union {A} (violating determinant plus the attribute it determines). Repeat if R1 or R2 still not in BCNF. TEACH example: X=Instructor, A=Course. R1={Student,Course,Instructor} minus {Course} = {Student,Instructor}. R2={Instructor} union {Course} = {Instructor,Course}. Join R1 ⋈ R2 on Instructor recovers original TEACH with NO fictitious tuples. R1 PK={Student,Instructor}. R2 PK={Instructor}. WRONG SPLITS (generate fictitious tuples): {Course,Instructor} & {Course,Student} - join on Course generates fictitious student-instructor pairs. General: n attributes choose k = n!/(k!(n-k)!) possible splits. For 256 attributes, k=2: 32,640 splits to check. Theory (not brute force) is essential.'},
+
+{u:'Normalisation',q:'Normal form summary - what each form removes',
+a:'1NF: all attributes atomic (no multivalued, no nested). Foundation for all higher forms. 2NF: 1NF + no PARTIAL dependencies on PK. Every non-prime attribute fully depends on the WHOLE PK. Only relevant when PK is composite. 3NF: 2NF + no TRANSITIVE dependencies via non-prime attributes. All non-prime attributes directly depend on every CK. BCNF: 3NF + every DETERMINANT is a superkey. Removes anomalies involving prime attributes (BCNF is strictly stronger). 4NF: BCNF + no multivalued dependencies. 5NF: 4NF + no join dependencies. 6NF: applies 5NF at single-attribute FD level. EXAM FOCUS: you must check and decompose to 2NF, 3NF, and BCNF given FDs. Pattern: each NF removes a more subtle type of redundancy than the previous one.'},
+
+{u:'SQL',q:'SQL history, philosophy, CREATE SCHEMA and TABLE syntax',
+a:'SEQUEL = Structured English Query Language, created by R. Boyce and D. Chamberlin, 1974, IBM Research Lab, CA. SQL is DECLARATIVE: state what you want, not how to do it. Different from procedural languages (Java, Python, C). First standard: SQL-92. Latest: SQL:2023 (June 2023, adds Graph Queries). Advice: always follow standard SQL for compatibility with most DMSs. CREATE SCHEMA Company; (each statement ends with semicolon). CREATE TABLE specifies: name, attributes with types/domains, and constraints. DATA TYPES: INT (integer numbers). REAL or DECIMAL(n,m) e.g. DECIMAL(3,2) means 3 digits total, 2 after decimal point = 9.99. CHAR(n) = exactly n characters e.g. CHAR(5)="Chris". VARCHAR(n) = variable length up to n. BOOLEAN (TRUE/FALSE/NULL). DATE format YYYY-MM-DD. Also TIMESTAMP, DATE INTERVALS. Ref: postgresql.org/docs/9.5/static/datatype.html'},
+
+{u:'SQL',q:'SQL value constraints and key constraints - full syntax',
+a:'VALUE CONSTRAINTS: DEFAULT {value} e.g. Dno INT NOT NULL DEFAULT 1. NOT NULL: NULL not permitted. CHECK clause: e.g. Dnumber INT NOT NULL CHECK(Dnumber > 0 AND Dnumber < 21). KEY CONSTRAINTS: PRIMARY KEY (Dnumber) - unique AND NOT NULL. UNIQUE (Dname) - specifies candidate keys (unique but can be NULL). REFERENTIAL CONSTRAINTS: FOREIGN KEY (Super_SSN) REFERENCES Employee(SSN). FOREIGN KEY (Mgr_SSN) REFERENCES Employee(SSN). TRIGGERED ACTIONS for ON DELETE and ON UPDATE: SET NULL - set FK to NULL. SET DEFAULT - set to declared default. CASCADE - propagate DELETE/UPDATE to all referencing tuples. No action = REJECT. Example: ON DELETE SET NULL ON UPDATE CASCADE. EXAM QUESTION: What happens when we delete a department? What happens when we delete an employee? The answer depends entirely on which triggered actions are declared.'},
+
+{u:'SQL',q:'SELECT-FROM-WHERE - structure, equijoin, and what it does NOT specify',
+a:'STRUCTURE: SELECT (what attributes), FROM (which tables), WHERE (which conditions using AND, OR, NOT). DOES NOT say how: no loading from disk, no searching algorithm, no condition checking order. Query 0: SELECT Address FROM EMPLOYEE WHERE Dno=4 OR Salary<31000. NOTE: WHERE Dno=4 AND Dno=5 returns NO tuples (impossible). JOIN EXAMPLE: SELECT Fname, Lname, Address FROM EMPLOYEE, DEPARTMENT WHERE Dname="Research" AND Dno=Dnumber. Two WHERE conditions: selection condition (Dname="Research") and equijoin condition (Dno=Dnumber = equijoin). TABLE AS VARIABLE: EMPLOYEE AS e - like int e=5 in Java. Essential for self-joins (recursive relationships). Query 2: SELECT E.Fname, E.Lname, S.Fname, S.Lname FROM EMPLOYEE AS E, EMPLOYEE AS S WHERE E.Super_ssn=S.Ssn. E=supervisee, S=supervisor. Employees without supervisors excluded by inner join.'},
+
+{u:'SQL',q:'Multi-sets, DISTINCT, set operators',
+a:'SQL relations are MULTISETS (bags) by default - duplicate rows allowed. SELECT Salary FROM EMPLOYEE: returns ALL salaries including duplicates. SELECT DISTINCT Salary FROM EMPLOYEE: unique values only (set semantics). SET: unique elements only {a,b,c}. MULTISET: duplicates allowed {a,a,a,b,c,c}. SET OPERATORS: UNION, EXCEPT (MINUS in some dialects), INTERSECT - remove duplicates by default. UNION ALL, EXCEPT ALL, INTERSECT ALL - preserve duplicates. Use DISTINCT for: finding unique values, before aggregation, reducing result size. Omit DISTINCT for: full result sets, when duplicates are meaningful, performance (DISTINCT requires sorting/hashing = extra cost). Query 3: two versions shown - with and without DISTINCT. "Retrieve salary of each employee" vs "retrieve all distinct salaries."'},
+
+{u:'SQL',q:'Three-valued logic - NULL, UNKNOWN, complete truth tables',
+a:'SQL uses THREE-VALUED LOGIC: TRUE (1), FALSE (0), UNKNOWN (0.5). RULE: ANY comparison with NULL evaluates to UNKNOWN - including NULL=NULL which evaluates to UNKNOWN! WRONG: WHERE Super_ssn = NULL - produces NO tuples even when Super_ssn is null! CORRECT: WHERE Super_ssn IS NULL or WHERE Super_ssn IS NOT NULL. AND truth table: T AND T=T, T AND F=F, T AND U=U, F AND F=F, F AND U=F, U AND U=U. OR truth table: T OR T=T, T OR F=T, T OR U=T, F OR F=F, F OR U=U, U OR U=U. NOT table: NOT T=F, NOT F=T, NOT U=U. Pattern: AND=min(x,y), OR=max(x,y), NOT=1-x where T=1, U=0.5, F=0. NULL aggregate rule: NULL values DISCARDED in all aggregates EXCEPT COUNT(*). Query 4: wrong version (= NULL) vs correct version (IS NULL) shown explicitly.'},
+
+{u:'SQL',q:'INNER JOIN vs OUTER JOINs - all types with examples',
+a:'INNER JOIN: match tuples via FK=PK (equijoin). Tuple appears only if match exists in BOTH relations. FK != NULL required. Syntax via WHERE: FROM R, S WHERE R.A=S.B. EXPLICIT: FROM R INNER JOIN S ON R.A=S.B. LEFT OUTER JOIN: every tuple in LEFT relation appears. If no match, fill right side with NULLs. Query 6: SELECT E.Lname, S.Lname FROM (EMPLOYEE AS E LEFT OUTER JOIN EMPLOYEE AS S ON E.Super_SSN=S.SSN). Result: {Smith,Wong}, {Franklin,Jennifer}, {Borg,NULL}. Borg has no supervisor so S.Lname=NULL. Compare Query 7 (INNER via WHERE): E.Super_SSN=S.SSN - Borg does NOT appear. RIGHT OUTER JOIN: every RIGHT relation tuple appears, fill left with NULLs. FULL OUTER JOIN: all tuples from both sides, fill with NULLs where no match. Key: OUTER JOINs preserve tuples that would be lost by INNER JOIN.'},
+
+{u:'SQL',q:'Nested uncorrelated queries - IN, NOT IN, ALL with examples',
+a:'Nested query: SELECT-FROM-WHERE block inside outer WHERE clause. Uncorrelated: inner executes ONCE, result used as constant by outer. IN: checks v in S. Query 8: SELECT Fname FROM EMPLOYEE WHERE Dno IN (SELECT Dnumber FROM DEPARTMENT WHERE Dname="Research"). Inner evaluates to {5}. Outer becomes WHERE Dno IN {5}. NOT IN: true if value not in ANY inner result. Example: SELECT W.ESSN FROM WORKS_ON AS W WHERE W.ESSN NOT IN (SELECT Q.ESSN FROM WORKS_ON AS Q WHERE Q.PNO IN (1,2,3)). Returns employees who do not work on projects 1, 2, or 3. ALL: compare value with ALL results using >,>=,<,<=,=,<>. Query 9: WHERE Salary > ALL (SELECT Salary FROM EMPLOYEE WHERE Dno=5). Returns employees earning more than EVERY employee in dept 5. Inner executes once, result is a set, outer checks against entire set.'},
+
+{u:'SQL',q:'Correlated queries - EXISTS, NOT EXISTS, and the "all grades A" pattern',
+a:'Correlated: inner executes ONCE PER OUTER TUPLE - uses outer tuple values as variable. EXISTS: TRUE if inner result non-empty. NOT EXISTS: TRUE if inner IS empty. Always use SELECT * with EXISTS. Query 10: employees with dependent same first name. SELECT E.Fname, E.Lname FROM EMPLOYEE AS E WHERE E.SSN IN (SELECT D.ESSN FROM DEPENDENT AS D WHERE E.Fname=D.Dependent_name). LEMMA 1: correlated queries using IN can be rewritten as single block: SELECT E.Fname, E.Lname FROM EMPLOYEE E, DEPENDENT D WHERE E.Ssn=D.Essn AND E.Fname=D.Dependent_name. DISTINCTION students (all grades A): SELECT S.Name FROM STUDENT S WHERE NOT EXISTS (SELECT * FROM GRADES G WHERE G.StudentID=S.StudentID AND G.Grade<>"A") AND EXISTS (SELECT * FROM GRADES G WHERE G.StudentID=S.StudentID). "Not exists a non-A grade" = "all grades are A". Second EXISTS ensures only graded students included.'},
+
+{u:'SQL',q:'EXISTS for "more than one" pattern - DEPT_LOCATIONS example',
+a:'DEPT_LOCATION(Dnumber, Dlocation). Task: Find departments with MORE THAN ONE location. SELECT DISTINCT D.Dnumber FROM DEPT_LOCATION AS D WHERE EXISTS (SELECT * FROM DEPT_LOCATION AS Y WHERE D.Dlocation <> Y.Dlocation AND D.Dnumber=Y.Dnumber). LOGIC: for each D, check if there exists another tuple Y for the SAME department (D.Dnumber=Y.Dnumber) with a DIFFERENT location (D.Dlocation<>Y.Dlocation). If yes -> department has more than one location. DISTINCT needed because a department with 3 locations would match and appear 3 times without it. GENERALISES: "find X that has at least two different Y values" -> EXISTS with self-join on X, inequality on Y. Example data: D1 has Glasgow and Edinburgh -> appears in result. D2 has Leeds only -> does not appear.'},
+
+{u:'AdvSQL',q:'Aggregate functions - full list, NULL rules, UDAs',
+a:'BUILT-IN AGGREGATION FUNCTIONS: COUNT(*) - count all tuples INCLUDING NULLs. COUNT(X) - count non-NULL X values. SUM(X) - sum non-NULL values. AVG(X) - average non-NULL values. MAX(X) - maximum non-NULL value. MIN(X) - minimum non-NULL value. CORR(X,Y) - correlation coefficient between two attributes. NULL RULE: NULL values DISCARDED in all aggregates EXCEPT COUNT(*). USER-DEFINED AGGREGATES (UDA): calculate GPA as weighted sum of grades; calculate Euclidean distance between geo-locations (location-based services); moving average for time-series prediction. Query 1: SELECT MAX(Salary) AS Highest_Sal, AVG(Salary) AS Average_Sal FROM EMPLOYEE WHERE Dno=5. "Show max and average salary of employees in dept 5." AS keyword renames output column.'},
+
+{u:'AdvSQL',q:'GROUP BY - partitioning, rules, histogram, regression analytics, multi-attribute',
+a:'GROUP BY partitions relation into groups where tuples share same grouping attribute value. Aggregation applied separately to each group independently. RULES: (1) grouping attribute MUST appear in SELECT clause. (2) NULL values form a separate NULL group. Query 2: SELECT Dno, COUNT(*), AVG(Salary) FROM EMPLOYEE GROUP BY Dno. HISTOGRAM: SELECT E.AGE, COUNT(*) FROM EMPLOYEE E GROUP BY E.AGE - approximates distribution of age. REGRESSION ANALYTICS: SELECT E.AGE, AVG(E.Salary) FROM EMPLOYEE E GROUP BY E.AGE - approximates dependency of Salary on AGE, used for prediction (given age, predict expected salary). MULTI-ATTRIBUTE grouping: GROUP BY E.Dno, E.Salary - groups tuples with same (Dno,Salary) PAIR. Result: COUNT(*) per pair. Actual analytics question: "Which is the most populated department?" Cannot use just GROUP BY for this - needs further processing.'},
+
+{u:'AdvSQL',q:'HAVING - filtering groups, contrast with WHERE, and the classic exam trap',
+a:'HAVING applies condition to SELECT/REJECT entire GROUPS after grouping. WHERE filters individual tuples BEFORE grouping - this CHANGES group sizes. Query 5: SELECT P.Pname, COUNT(*) FROM PROJECT P, WORKS_ON W WHERE P.Pnumber=W.Pno GROUP BY P.Pname HAVING COUNT(*)>2. THE CLASSIC TRAP: "For each department with MORE THAN 5 employees, count how many earn more than 40K." WRONG: SELECT Dno, COUNT(*) FROM EMPLOYEE WHERE Salary>40000 GROUP BY Dno HAVING COUNT(*)>5. WRONG because WHERE removes low-salary employees BEFORE grouping, so group sizes are wrong (dept with 6 employees but 4 with low salary counts as 2, not 6). CORRECT APPROACH: (1) inner query finds departments with more than 5 TOTAL employees. (2) outer query finds those employees with Salary>40K in those departments. (3) then group and count. Key: WHERE is for row-level filtering, HAVING is for group-level filtering.'},
+
+{u:'AdvSQL',q:'Max employees per department - full nested query with double subquery',
+a:'Task: show department(s) with MAXIMUM number of employees. Could be a tie. CANNOT use HAVING COUNT(*)=MAX(COUNT(*)) - aggregate of aggregate is illegal in standard SQL. SOLUTION - three-step nesting: Step 1 (innermost): SELECT D.Dno, COUNT(*) AS members FROM EMPLOYEE D GROUP BY D.Dno - this gives a table A of (Dno, count) pairs. Step 2 (middle): SELECT MAX(A.members) FROM A - finds the max count value. Step 3 (outer): SELECT Dno, COUNT(*) FROM EMPLOYEE GROUP BY Dno HAVING COUNT(*) = (SELECT MAX(A.members) FROM (SELECT D.Dno, COUNT(*) AS members FROM EMPLOYEE D GROUP BY D.Dno) AS A). Note: A is a subquery given an alias using AS A. The outer HAVING filters to keep only departments matching the maximum count. This handles ties naturally.'},
+
+{u:'AdvSQL',q:'WINDOW functions - OVER, PARTITION BY, ORDER BY, and contrast with GROUP BY',
+a:'Window functions compute analytics over a SUBSET of rows linked to the current row WITHOUT collapsing rows (unlike GROUP BY). OVER() defines the window. PARTITION BY within OVER restricts scope to rows with same partition value (computed separately per partition and recalculated for each). ORDER BY within OVER defines ordering for framing: transforms SUM into cumulative sum, MIN into incremental min. Example running sum per dept: SELECT Dno, Month, Revenue, SUM(Revenue) OVER (PARTITION BY Dno ORDER BY Month ROWS BETWEEN 1 PRECEDING AND CURRENT ROW) AS RunSum FROM Finance. Slides: DNO=1 RunSum(1)=25, RunSum(2)=25+30=55, RunSum(3)=30+20=50, RunSum(4)=20+15=35. KEY DIFFERENCE: GROUP BY collapses rows (one row per group). OVER keeps ALL rows in output, just adds analytics column alongside existing rows.'},
+
+{u:'AdvSQL',q:'Window framing - all ROWS BETWEEN options with concrete examples',
+a:'ROWS BETWEEN lower_bound AND upper_bound. BOUNDS: UNBOUNDED PRECEDING (from start of partition). CURRENT ROW (current row). UNBOUNDED FOLLOWING (to end of partition). N PRECEDING (N rows before current). N FOLLOWING (N rows after current). EXAMPLES FROM SLIDES: ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW -> cumulative running total. ROWS BETWEEN 2 PRECEDING AND 2 FOLLOWING -> 5-row centred window. ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING -> remaining/trailing sum. ROWS BETWEEN 1 PRECEDING AND CURRENT ROW -> 2-month rolling sum. CENTRE calculation example from slides: DNO=1, row with Revenue=15 at month 4. Window is months 3,4,5: 20+15+25=60, AVG=20. AVG window example: (25+30)/2=27.5 at start (only 1 preceding exists). (25+30+20)/3 = 25 for middle. Pattern: if fewer rows available at boundaries, window shrinks.'},
+
+{u:'AdvSQL',q:'ROW_NUMBER, RANK, DENSE_RANK - differences with numbers and exam queries',
+a:'ROW_NUMBER(): unique sequential number regardless of ties. Values 1,2,3,4,5 even if revenues are equal. RANK(): same rank for ties, SKIPS ranks after tie (gap). Revenues 30,25,25,20 -> ranks 1,2,2,4 (gap after double-2). DENSE_RANK(): same rank for ties, NO gap. Same example -> 1,2,2,3. SQL for RANK per dept: SELECT Dno, Month, Revenue, RANK() OVER(PARTITION BY Dno ORDER BY Revenue DESC) AS Rank FROM Finance. SELECT DISTINCT for top-2 per dept: SELECT DISTINCT Dept, Rev, Top FROM (SELECT Dno AS Dept, Month, Revenue AS Rev, DENSE_RANK() OVER(PARTITION BY Dno ORDER BY Revenue DESC) AS Top FROM Finance) AS Res WHERE Top=2. Result: Dept 1 -> 25K, Dept 2 -> 30K, etc. Dept with most employees using RANK: RANK() OVER(ORDER BY Counters DESC) AS Ranking then WHERE Ranking=1.'},
+
+{u:'AdvSQL',q:'Common Table Expressions (WITH/CTE) - syntax, two full examples',
+a:'SYNTAX: WITH cte_name AS (SELECT ...) SELECT ... FROM cte_name. PURPOSE: simplify complex queries, make subqueries reusable, especially with window functions. Evaluated ONCE, referenced multiple times. EXAMPLE 1 - departments with revenue > 150K: WITH Winner AS (SELECT Dno AS Department, SUM(Revenue) AS Profit FROM Finance GROUP BY Dno HAVING SUM(Revenue)>150) SELECT COUNT(*) FROM Winner. EXAMPLE 2 - best-selling item per day per location (uses schema CafeSales(ID, ItemSold, SaleAmount, SaleDate, CafeLocation)): WITH DailySales AS (SELECT SaleDate, CafeLocation, ItemSold, SUM(SaleAmount) AS TotalSales FROM CafeSales GROUP BY SaleDate, CafeLocation, ItemSold) SELECT ItemSold, SaleDate, CafeLocation FROM (SELECT SaleDate, CafeLocation, ItemSold, TotalSales, RANK() OVER(PARTITION BY SaleDate, CafeLocation ORDER BY TotalSales DESC) AS Best FROM DailySales) AS X WHERE Best=1 ORDER BY SaleDate. Three steps: (1) group sales, (2) rank per day/location, (3) report best.'},
+
+{u:'AdvSQL',q:'Location sales ranking - CTE combined with RANK window function',
+a:'Schema: CafeSales(ID, ItemSold, SaleAmount, SaleDate, CafeLocation). Data: 9 rows including Coffee, Sandwich, Tea, Salad across Learning Hub and Library Cafe over Jan 2024. Task: Rank the cafe LOCATIONS based on their TOTAL sales. WITH LocationSales AS (SELECT CafeLocation, SUM(SaleAmount) AS TotalSales FROM CafeSales GROUP BY CafeLocation) SELECT CafeLocation, TotalSales, RANK() OVER(ORDER BY TotalSales DESC) AS LocationRank FROM LocationSales. CTE first aggregates total sales per location. Then RANK applies to that aggregated result. Learning Hub total: 2.5+3+1.5+3+2.5+2.5=15.5. Library Cafe: 2.5+2.5+4=9. Result: Learning Hub ranked 1, Library Cafe ranked 2. This pattern - aggregate then rank - is a very common exam pattern.'},
+
+{u:'PhysDesign',q:'Physical storage hierarchy and the fundamental I/O bottleneck',
+a:'3-LEVEL HIERARCHY: (1) Primary storage: RAM (~30ns access), cache (~1ns) - fast, expensive, volatile, small capacity. (2) Secondary: HDD (~30ms), SSD (~0.1ms) - slower, cheap, non-volatile, large. (3) Tertiary: optical drives, tape - slowest, cheapest, largest capacity. Going DOWN: capacity up, access speed down, cost down. FUNDAMENTAL PROBLEM: database is too large to fit in main memory. By default, data access requires secondary storage (HDD) due to low cost. CONSEQUENCES: C1: HDD is not CPU-accessible - data must first be loaded from HDD to RAM, THEN processed in RAM (2-step mandatory process). C2: HDD=30ms, RAM=30ns -> HDD is 1,000,000x slower. ANALOGY: "1 day in RAM = 1,000,000 days in HDD." GENERAL CHALLENGE: organise data on HDD to minimise this I/O latency. Block = minimum communication unit (transfer blocks not individual records). Block size: 512B-4096B (iOS/Windows 11). HDFS (Big Data): 128MB-256MB.'},
+
+{u:'PhysDesign',q:'Records, blocks, blocking factor - all formulas with example',
+a:'REPRESENTATION: Tuple -> Record. Records grouped -> Block. File -> group of blocks. RECORD SIZE: R = sum of all attribute sizes in bytes. Example: NAME(30B)+SSN(10B)+ADDRESS(60B) = R=100 bytes. BLOCKING FACTOR: bfr = floor(B/R). floor(x) = largest integer <= x. Example: bfr=floor(512/100)=floor(5.12)=5 records per block. NUMBER OF BLOCKS: b=ceil(r/bfr). ceil(x) = smallest integer >= x. Example: r=1103, bfr=5 -> b=ceil(1103/5)=ceil(220.6)=221 blocks. CONSTRAINT: B >= R (at least 1 record per block). LINKED ALLOCATION: each block i has a pointer to physical address of logically next block i+1 ANYWHERE on disk (a linked list of blocks on physical disk). VARIABLE-LENGTH RECORDS: attribute sizes vary per tuple (e.g. VARCHAR). More complex blocking calculation. PARAMETER TABLE: bfr or f = blocking factor (tuples/block). R = record size (bytes). b = number of file blocks. B = block size (bytes).'},
+
+{u:'PhysDesign',q:'Expected cost via expectation formula - heap file proof',
+a:'EXPECTATION: let X be a discrete random variable. P(X=x) = probability X has value x. E[X] = sum over all x of P(X=x)*x (weighted sum). For cost function C(x): E[C(x)] = sum over all x of P(X=x)*C(x). HEAP FILE PROOF: P(x)=1/b (uniform - record equally likely in any block). C(x)=x (linear search cost = number of blocks examined). E[C(x)] = (1/b)*(1+2+...+b) = (1/b)*(b*(b+1)/2) = (b+1)/2. So AVERAGE heap linear search = (b+1)/2, not exactly b/2. Best case=1, worst case=b. GENERAL PRINCIPLE: for non-uniform distributions (histograms), replace 1/b with actual P(X=x). For multiple buckets (hash): E[C] = sum over buckets of P(bucket)*C(bucket). This formula underpins ALL expected cost calculations in query processing.'},
+
+{u:'PhysDesign',q:'Heap file - all operations with costs',
+a:'UNORDERED FILE: new records appended to end. INSERT: load last block (address in file header), append record, write back = 2 block accesses = O(1). RETRIEVE (linear search): load blocks 1,2,...b until found. Average=(b+1)/2. Worst case=b (not found). O(b). DELETE: find record O(b) + mark deletion bit 0->1 + write block back O(1). Total O(b)+O(1). Use DELETION MARKER per record (bit=0 means live, bit=1 means deleted). Periodically reorganise: gather non-deleted records (bit=0), free up blocks with deleted records. Leaves unused spaces within blocks. GOOD FOR: insert-heavy workloads, full table scans, no specific ordering needed. BAD FOR: point queries by non-key, ordered access. SQL example: SELECT * FROM EMPLOYEE WHERE SSN="12345" requires scanning all b blocks on heap file.'},
+
+{u:'PhysDesign',q:'Sequential (ordered) file - all operations with costs and binary search',
+a:'All records physically SORTED by ordering field, kept sorted AT ALL TIMES. RETRIEVE by ordering field: binary search = O(log2(b)). RETRIEVE by non-ordering field: linear scan = O(b). RANGE QUERY by ordering field: binary search to start + sequential scan = O(log2(b))+O(b). INSERT: binary search to find position O(log2(b)) + shift half records on average -> very expensive for large files. SOLUTION: chain pointers + overflow blocks (sorted linked list). DELETE: mark deleted O(log2(b)) + update pointer O(1) + periodic re-sort. UPDATE on ordering field: delete old + insert new (most expensive case). UPDATE on non-ordering field: O(log2(b))+O(1). BINARY SEARCH WHY: log2(x) = number of times to divide x by 2 to reach 1. log2(140)=7.12 -> 8 steps. Insight: if we split into m>2 subspaces each step -> logm(b) steps -> B+ Tree idea!'},
+
+{u:'PhysDesign',q:'Binary search algorithm pseudocode',
+a:'BINARY SEARCH (k): /* search for record with key value k */ l <- 1; u <- b; /* b = total blocks */ WHILE (u >= l) DO BEGIN i <- (l+u) div 2; /* go to middle block */ read block i from disk to memory; /* 1 block access */ IF k < (key of FIRST record in block i) THEN u <- i-1 /* search left half */ ELSE IF k > (key of LAST record in block i) THEN l <- i+1 /* search right half */ ELSE IF record with key=k found in memory THEN found ELSE not_found; END. COMPLEXITY: each iteration halves search space. log2(b) iterations total. Each iteration = 1 block access. Total = ceil(log2(b)) block accesses. WHY LOGARITHM: log base 2 counts number of halvings needed to reach 1 from b. EXTENSION: if we could split into m subspaces (not just 2) each step -> logm(b) steps. This is exactly the fan-out principle behind multi-level indexes and B+ Trees.'},
+
+{u:'PhysDesign',q:'Hash file - construction, buckets, collision, external hashing algorithm',
+a:'STRUCTURE: partition records into M buckets (0 to M-1) using hash function y=h(k)=k mod M. REQUIREMENT: h uniformly distributes records - each bucket chosen with probability 1/M. EXTERNAL HASHING ALGORITHM (retrieve where SSN=123): (1) Compute h(123)=123 mod M -> bucket y. (2) Use hash map to get physical block address of bucket y. (3) Fetch block from disk to memory. (4) Linear search in memory for SSN=123. COMPLEXITY: O(1) for main bucket. COLLISION: two or more records map to same bucket (bucket full). SOLUTION: chain pointer method - overflow block linked to main bucket. EXAMPLE (M=3, h(k)=k mod 3): k=1->bucket 0, k=11->bucket 2, k=2->bucket 2, k=4->bucket 1. Collision on bucket 2 (k=11 and k=2 both -> bucket 2). Complexity with overflow: O(1)+O(n) where n=overflow blocks. "Indirect clustering": tuples clustered by hashed value y, not by original value k.'},
+
+{u:'PhysDesign',q:'Hash file - range query problem, distribution unpredictability, decision rule',
+a:'RANGE QUERY ACHILLES HEEL: WHERE AGE BETWEEN 20 AND 50. Problem: hash function distributes uniformly -> ages 21,22,...,50 map to DIFFERENT buckets. Each treated as separate equality query. Complexity: O(m)+O(n*m) where m=distinct values in range, n=overflow blocks per bucket. Terrible for ranges. DISTRIBUTION PROBLEM: age=20 has 2000 employees -> 1 main+49 overflow blocks. age=60 has 23 employees -> 1 main block. UNPREDICTABLE: expected cost depends heavily on data distribution. DECISION RULE example (bfr=2, 3 buckets, 1 overflow block in bucket 1, p=fraction of queries using field k): Hash worst-case: H1=p*(0.33*1+0.33*2+0.33*1)+(1-p)*3=4-2.68p. Sort worst-case (binary search): H2=log2(3)*p+(1-p)*3=3-1.41p. IF H1<H2 (hash better): 4-2.68p < 3-1.41p -> -1.27p < -1 -> p>0.79. Conclusion: if MORE THAN 79% of queries use field k as equality search -> HASH. Otherwise -> SORT.'},
+
+{u:'PhysDesign',q:'Hash file in-class example - full calculation with comparison',
+a:'SETUP: M=3 buckets, bfr=2 records/block. Keys: {1000,4540,4541,4323,1321,1330}. ASSIGNMENT (k mod 3): 1000 mod 3=1, 4540 mod 3=1, 4541 mod 3=2, 4323 mod 3=0, 1321 mod 3=1, 1330 mod 3=1. Bucket 0: {4323}=1 record. Bucket 1: {1000,4540,1321,1330}=4 records=2 blocks (1 main + 1 overflow). Bucket 2: {4541}=1 record. COSTS for SELECT * WHERE SSN=k: P(bucket)=1/3 for each. WORST CASE: 0.33*1 + 0.33*(1+1) + 0.33*1 = 0.33+0.66+0.33 = 1.32 block accesses. BEST CASE: 0.33*1+0.33*1+0.33*1 = 1 block access. AVERAGE CASE: 0.33*1 + 0.33*(0.5*1+0.5*2) + 0.33*1 = 0.33+0.5+0.33 = 1.15 block accesses. COMPARE: Heap (b=3) average=(3+1)/2=2. Sequential (b=3) binary search=log2(3)=1.58. Hash average=1.15 WINS on average case.'},
+
+{u:'Indexing1',q:'Index fundamentals - four principles, dense vs sparse, overhead vs speed',
+a:'PRINCIPLE 1: create one index over one field (index field). PRINCIPLE 2: index is a SEPARATE file on disk. PRINCIPLE 3: all index entries are unique and SORTED by index field. Entry format: (index-value, block-pointer). PRINCIPLE 4: first search index for block-pointer, then access data block. WHY INDEX IS SMALLER: index entries are smaller records (just key+pointer) -> more entries per block -> ibfr > bfr -> fewer index blocks -> fewer block accesses for binary search. DENSE INDEX: one entry per RECORD (used when file not ordered by index field - no anchor records possible). SPARSE INDEX: one entry per BLOCK using anchor records (first record per block) - only possible for ORDERED files. HYPOTHESIS 1: index file occupies fewer blocks than data file. HYPOTHESIS 2: searching index is faster (both proven by examples). TRADE-OFF: additional storage and maintenance overhead vs. faster search speed.'},
+
+{u:'Indexing1',q:'Three index types - when each is used',
+a:'PRIMARY INDEX: ordered file over ORDERING, KEY field of sequential data file. File sorted by the key field. Example: index on SSN for file sorted by SSN. SPARSE (one entry per data block, anchor = first record per block). CLUSTERING INDEX: ordered file over ORDERING, NON-KEY field. File sorted by a non-key field. Example: index on DNO for file sorted by DNO. SPARSE (one entry per distinct value pointing to first block of cluster). Cluster = all blocks for one distinct value. SECONDARY INDEX ON KEY: non-ordering, KEY field. File NOT ordered by this field (heap, hash, or ordered by different field). Example: SSN index on a heap file. DENSE (one entry per record - cannot use anchors). SECONDARY INDEX ON NON-KEY: non-ordering, NON-KEY field. File NOT ordered by this field. Two levels of indirection. DENSE at level 2 (one entry per distinct value), but points to a cluster of block-pointers.'},
+
+{u:'Indexing1',q:'Primary index - full worked example [E1] with overhead and speedup calculations',
+a:'EMPLOYEE: r=300,000 records, R=100B, B=4096B, SSN=9B, Pointer=6B. DATA FILE: bfr=floor(4096/100)=40 records/block. b=ceil(300000/40)=7500 blocks. WITHOUT INDEX - binary search: ceil(log2(7500))=13 block accesses. WITH PRIMARY INDEX on SSN: index entry size = 9+6=15B. ibfr=floor(4096/15)=floor(273.07)=273 entries per index block. Sparse: one entry per data block = 7500 entries. Index blocks: ib=ceil(7500/273)=ceil(27.47)=28 blocks. OVERHEAD: 28 extra blocks = 28/7500 = 0.37% additional storage. SEARCH COST: binary search on index = ceil(log2(28))=5 block accesses PLUS 1 for data block = TOTAL 6. SPEEDUP vs binary search: (13-6)/13 = 53.8%. SPEEDUP vs linear scan (3750): (3750-6)/3750 = 99.84%. Trade-off diagram: 28 block overhead for 53% speed gain.'},
+
+{u:'Indexing1',q:'Clustering index - worked example with linear search comparison formula',
+a:'EMPLOYEE: r=300,000, R=100B, B=4096B, DNO=9B, P=6B, 10 departments uniform. DATA FILE: b=7500 blocks, bfr=40. CLUSTERING INDEX on DNO: ibfr=floor(4096/(9+6))=273 entries/block. One entry per DISTINCT value = 10 entries. ib=ceil(10/273)=1 block. OVERHEAD: 1 block = 0.01% additional storage. SEARCH COST: 1 (index block) + 750 (data blocks for one cluster = 7500/10) = 751 accesses. COMPARISON - Linear search over ordering non-key field (without clustering index): FORMULA = b*(n+1)/(2n) where n=distinct values, b=total blocks. = 7500*(10+1)/(2*10) = 7500*11/20 = 4125 block accesses. WITH index: 1+750=751 vs WITHOUT: 4125. SPEEDUP: (4125-751)/4125 = 81.8%. EXAM Q: Is clustering index sparse or dense? SPARSE - one entry per distinct clustering value.'},
+
+{u:'Indexing1',q:'Secondary index on non-ordering KEY (dense) - worked example [A1]',
+a:'WHY DENSE: file not ordered by index field -> cannot use anchor records -> must have one entry per RECORD. EMPLOYEE: r=300,000, R=100B, B=4096B, SSN=9B, P=6B. bfr=40, b=7500 data blocks. SECONDARY INDEX on SSN (non-ordering, key): entry size=9+6=15B. ibfr=floor(4096/15)=273 entries/block. Dense -> r=300,000 entries. Index blocks: ib=ceil(300,000/273)=ceil(1098.9)=1099 blocks. OVERHEAD: 1099/7500=14.65% more storage. SEARCH COST: binary search on 1099 blocks = ceil(log2(1099))=11 PLUS 1 data block = TOTAL 12 block accesses. LINEAR SCAN comparison: b/2=3750 block accesses. SPEEDUP: (3750-12)/3750 = 99.68%. Trade-off: 14% storage overhead -> 99.68% speed improvement. Compare to primary index: same search speed (12 vs 6) but 40x more overhead (14% vs 0.37%) because dense vs sparse.'},
+
+{u:'Indexing1',q:'Secondary index on non-ordering NON-KEY - two-level indirection structure',
+a:'PROBLEM: many records share same non-key value, scattered throughout unsorted file. One block-pointer not enough. SOLUTION: TWO levels of indirection. LEVEL 2 (index file): one entry per distinct value = (distinct-value, pointer to Level-1 block). LEVEL 1: blocks of block-pointers - one pointer per record with that distinct value (a cluster of pointers). LEVEL 0: actual data blocks. SEARCH for DNO=3: (1) binary search in Level-2 index = t block accesses. (2) direct access to Level-1 block = 1 access. (3) load all corresponding data blocks. Example: DNO=3 has 4 data blocks -> 1+1+4=6 accesses. Serial scan on file = 7500 accesses. Speedup = 99.92%. NOTE: (1) index is DENSE (all distinct values represented). (2) each Level-1 block stores block-pointers for one distinct value. (3) the Level-1 structure is essentially a cluster of pointers. Fixed typo in slides: should be "level-2 index" in binary search step.'},
+
+{u:'Indexing1',q:'Multi-level index - theorem, fan-out, and 3-level example [E2]',
+a:'OBSERVATION: any index file is ordered by unique key with fixed-length entries -> can build PRIMARY INDEX ON TOP of any index (index of an index). Level 1 = base index (any type). Level 2 = primary index of level 1. Level t = top (only 1 block). THEOREM 3: given Level-1 index with blocking factor m entries/block (fan-out), maximum level t = logm(b). Cost: t+1 block accesses (t index levels + 1 data block). EXAMPLE [E2]: b=7500, m=273 (ibfr). L1: 1099 blocks. L2: ceil(1099/273)=5 blocks. L3: ceil(5/273)=1 block. t=3. Cost=3+1=4 block accesses. Compare: 1-level=12, no index=3750. SPEEDUP: (12-4)/12=66.7% faster than L1, 99.9% faster than no index. OVERHEAD: L1=1099+L2=5+L3=1=1105 extra blocks=14.7%. Fan-out m is KEY: logm(b) < log2(b) for m>2. Napier logarithms (Uni St Andrews 1550-1617): log20(b) << log2(b). "Welcome to Big Database Systems!"'},
+
+{u:'Indexing2',q:'Why B+ Tree? Static multi-level index limitations',
+a:'STATIC MULTI-LEVEL INDEX PROBLEM: all encapsulated indexes are physically ordered files -> insertions and deletions are COSTLY because updates must be reflected at ALL index levels. A single data record insertion may require reorganising multiple index levels. Reference: Larson (1981) "Analysis of index-sequential files with overflow chaining" ACM TODS 6(4). DESIRED PROPERTIES: adjust to deletions and insertions, expand and shrink with data distribution, self-balancing (subtrees of same depth). PROPOSALS: B Tree (Boeing Research Lab, 1972), B+ Tree (IBM), B* Tree, R Tree (d-dimensional spatial data). USED BY: Oracle, MySQL, PostgreSQL, Microsoft SQL Server, IBM DB2, SQLite, Google BigTable, MongoDB, Amazon DynamoDB, Apple Maps, ArcGIS, NVIDIA. Essentially EVERY production database system uses B+ Tree for indexes.'},
+
+{u:'Indexing2',q:'B-Tree node structure and search - with p=3 example',
+a:'B-TREE NODE ORDER p: {P1,(K1,Q1),P2,(K2,Q2),...,Pp-1,(Kp-1,Qp-1),Pp}. Keys sorted: K1<K2<...<Kp-1. Qi = data-pointer to block holding value Ki. Pi = tree-pointer to subtree. NAVIGATION: P1 -> X<K1. Pi (1<i<q) -> Ki-1<X<=Ki. Pp -> X>Kp-1. Each internal node stores data pointers alongside keys - data accessible at ANY level. EXAMPLE (p=3, balanced): Search 8=2 block accesses. Search 7=3 block accesses. Search 12=3 block accesses. Search 31=2 accesses (not found, no data block needed). ADVANTAGE over static: self-balancing tree. DISADVANTAGE vs B+ Tree: data pointers in internal nodes consume space that could be used for tree pointers -> lower fan-out -> deeper tree for same dataset. Split and merge operations maintain balance during insertions and deletions.'},
+
+{u:'Indexing2',q:'B-Tree in-class example [E1] - capacity and storage calculation',
+a:'ORDER p=23, assume 69% full: 0.69*23=16 tree-pointers, 15 keys per node. Fan-out=16. STRUCTURE: Root(1): 15 keys, 16 pointers. L1(16): 16*15=240 keys, 16*16=256 pointers. L2(256): 256*15=3840 keys, 256*16=4096 pointers. L3(4096): 4096*15=61,440 keys (leaf level). TOTAL KEYS: 61440+3840+240+15=65,535. PROBLEM WITH 65,536 keys: need another level. 4096*16=65,536 new leaf nodes storing 983,040 keys. Redundancy: 93.3% of new level space is empty for just one extra key! STORAGE CALCULATION (B=512B, Q=7B, P=6B, V=9B): Tree node size=16*6+15*7+15*9=96+105+135=336B. ibfr=floor(512/336)=1 node per block (normally). Total nodes: 1+16+256+4096=4369 nodes = 4369 blocks. Actual disk size=4369*512=2,236,928 bytes=2.24MB for metadata only! Challenge: find optimal p to avoid this redundancy.'},
+
+{u:'Indexing2',q:'B+ Tree three principles and both node structures',
+a:'Removes data-pointers from INTERNAL nodes to maximise fan-out. PRINCIPLE 1: internal nodes have NO data-pointers - only keys and tree-pointers. PRINCIPLE 2: ONLY leaf nodes hold actual data-pointers. PRINCIPLE 3: leaf nodes hold ALL key values sorted with corresponding data-pointers. PRINCIPLE 4: some key values are REPLICATED in internal nodes to guide search. INTERNAL NODE ORDER p: {P1,K1,P2,...,Kp-1,Pp}. p tree-pointers, p-1 keys. NAVIGATION: P1->X<=K1. Pi (1<i<q)->Ki-1<X<=Ki. Pp->X>Kp-1. Note: includes equal case on LEFT (<=Ki). LEAF NODE ORDER pL: {(K1,Q1),(K2,Q2),...,(KpL,QpL),Pnext}. Qi=data-pointer to actual data block. Pnext=pointer to NEXT LEAF NODE (sibling). All leaves at same level (balanced). Linked-list of leaf nodes enables efficient range queries. B+ Tree example (p=3 internal, pL=2 leaf) shown in slides.'},
+
+{u:'Indexing2',q:'B+ Tree order calculation - full worked example [E2]',
+a:'Block B=512B, key V=9B, data-pointer Q=7B, tree-pointer P=6B. INTERNAL NODE equation: p*P+(p-1)*V<=B. p*6+(p-1)*9<=512. 6p+9p-9<=512. 15p<=521. p=floor(521/15)=floor(34.7)=34. B+ Tree internal order p=34 (34 tree-pointers, 33 key values). LEAF NODE equation: pL*(Q+V)+P<=B. pL*(7+9)+6<=512. pL*16<=506. pL=floor(506/16)=floor(31.6)=31. B+ Tree leaf order pL=31 (31 key/data-pointer pairs). B-TREE comparison: p*P+(p-1)*(V+Q)<=B. p*6+(p-1)*16<=512. 6p+16p-16<=512. 22p<=528. p=floor(528/22)=floor(24)=24. B-Tree order p=24. CONCLUSION: B+ Tree p=34 vs B-Tree p=24. Higher fan-out means: more entries per level, shallower tree, faster search for same dataset size.'},
+
+{u:'Indexing2',q:'B+ Tree capacity example [A1] - 3-level structure vs B-Tree comparison',
+a:'p=34 internal, pL=31 leaf, 69% full: 0.69*34=23 tree-pointers, 22 keys per internal node; 0.69*31=21 data-pointers per leaf. STRUCTURE: Root(1): 22 keys, 23 pointers. L1(23): 23*22=506 keys, 23*23=529 pointers. L2(529): 529*22=11,638 keys, 529*23=12,167 pointers to leaves. LEAF LEVEL(12,167): 12,167*21=255,507 key/data-pairs. Total nodes: 1+23+529+12,167=12,720 blocks. B+ Tree stores 255,507 index entries. B-Tree (same levels, p=23, 69% full): 65,535 entries. B+ Tree stores 290% MORE entries than B-Tree for same 3-level structure! NOTE: B+ Tree occupies ~3x more blocks (12,720 vs 4,369) but stores ~3.9x more data. Search: t+1=4+1=5 block accesses for any key. If file needs >65,535 records: B-Tree needs new level; B+ Tree level UNCHANGED.'},
+
+{u:'Indexing2',q:'B vs B+ Tree - key differences and range queries',
+a:'B-TREE: data-pointers in ALL nodes (internal + leaf). Keys distributed throughout tree. Can access data at any level. Fewer levels for same data. Range query: must traverse non-contiguous non-leaf nodes (not linked). B+ TREE: data-pointers ONLY in leaf nodes. ALL keys appear in leaves (some also replicated in internal nodes). Internal nodes = pure navigation structure. Leaf nodes form LINKED LIST via Pnext -> range queries traverse leaf chain linearly after finding start. Higher fan-out in internal nodes -> shallower tree for large datasets. More total blocks for same key count but MUCH higher capacity. RANGE QUERY with B+ Tree (slides diagram): traverse tree to find first leaf with SSN>=3 (e.g. t=3 block accesses), then follow Pnext pointers to collect all SSN<=10 (sequential leaf traversal). Very efficient. B-Tree range query requires going back to root for each value in range. CURRENT STANDARD: ALL major production DBMSs use B+ Tree.'},
+
+{u:'Indexing2',q:'B+ Tree use case I - range query with decision rule',
+a:'SETUP: SSN in {1,...,1250}, b=1250 data blocks, bfr=1, leaf order q=10, node order p=5, all 100% full. TREE STRUCTURE: Root(1)->L1(5)->L2(25)->Lf(125 leaves * 10=1250 SSNs). t=4 levels. RANGE QUERY COST for ratio a=(U-L)/n where n=1250: t block accesses to reach start leaf. q data blocks at first leaf. Sibling leaves accessed: an/q-1. Each sibling leaf accesses q data blocks. FORMULA: C(a) = t + q + (an/q-1) + (an/q-1)*q = an*(1+1/q) + t - 1. With t=4, q=10, n=1250: C(a)=1375a+3. DECISION RULE: use B+ Tree if C(a)<b=1250. 1375a+3<1250 -> a<0.906. IF RANGE RATIO < 90.6%: use B+ Tree. IF >= 90.6%: serial scan. At a=1: C(1)=1378>1250=b -> serial scan wins. LESSON: B+ Tree is NOT always best. For very large ranges (more than 90.6% of all values), sequential scan is cheaper.'},
+
+{u:'Indexing2',q:'B+ Tree use case II - non-key index, two-level structure, cost',
+a:'SETUP: n=1000 departments, r=100,000 employees, bfr=50, DNO uniform (d=r/n=100 employees/dept). Leaf order q=10, tree order p=10. b=ceil(100000/50)=2000 data blocks. 1000 DNO values in ceil(1000/10)=100 leaf nodes. Each leaf entry points to a block of pointers (LEVEL 1 STRUCTURE: 10 blocks of pointers, each block holding 100 pointers to 100 data blocks for 100 employees in that dept). TREE STRUCTURE: Root(1)->L1(10)->Lf(100). t=3. SEARCH COST for DNO=x: 1 (root) + 1 (L1) + 1 (leaf) + 1 (pointer block) + 100 (data blocks for 100 employees) = 104 block accesses. SERIAL SCAN: 2000 accesses. SPEEDUP: (2000-104)/2000=94.8%. INDEX SIZE: 1+10+100 (tree nodes) + 1000 (pointer blocks for all departments) = 1111 blocks = 55.5% of file size (2000 blocks). Trade-off: 55% overhead -> 94.8% speed gain.'},
+
+{u:'Indexing2',q:'Put-all-together - comparing linear search, L1 index, B+ Tree',
+a:'SETUP: B=512B, r=100,000, bfr=10, all pointers=10B, key=10B. Data file: b=10,000 blocks. LINEAR SEARCH: b/2=5,000 block accesses. L1 SECONDARY INDEX: entry=20B, m=floor(512/20)=25 entries/block, dense=100,000 entries, ib=ceil(100,000/25)=4,000 blocks. Binary search: log2(4000)+1=12+1=13 block accesses. Overhead: 4000 blocks = 40%. B+ TREE (p=m=25 for discussion): internal node: 25*10+24*10=490B fits in 1 block. Leaf: 24*(10+10)+1*10=490B fits in 1 block. Root(1)->L1(25)->L2(625)->Lf(15625 leaves * 24=375,000 entries). Only 100,000/375,000=27% occupied! Total blocks: 1+25+625+15625=16,276. Overhead: 162%. Search: 5 block accesses. TRADE-OFF (I/O vs storage): Linear scan=5000/0%. L1=13/+40%. B+ Tree=5/+162%. LESSON: B+ Tree at p=25 is POORLY DESIGNED (73% empty). Fix: reduce p, add more levels. Optimal p keeps nodes 50-69% full.'},
+
+{u:'QueryProc',q:'External sorting - why fundamental, formula, and merge degree',
+a:'ALMOST ALL SQL involves sorting: CREATE PRIMARY INDEX (sort by key), ORDER BY, SELECT DISTINCT (cluster then find distinct), GROUP BY (cluster groups). SELECT DISTINCT and GROUP BY both reduce to "sort then scan." FUNDAMENTAL LIMITATION: cannot sort entire relation in memory (too large). EXTERNAL SORT-MERGE STRATEGY: Phase 1 Divide: divide b-block file into L sorted sub-files (b/L blocks each), sort each in memory using quicksort. Phase 2 Merge: merge M sorted sub-files at a time into larger sorted files, repeat until one sorted file. LEMMA 1 COST FORMULA: 2b*(1+logM(L)) block accesses. b=number of file blocks. M=merge degree (sub-files merged per pass, M>=2). L=number of initial sorted sub-files. M=2: worst case (merge pairs only). M>2: M-way merging, better. Proof reference: Knuth "Sorting and Searching" 3rd ed., pp.158-168.'},
+
+{u:'QueryProc',q:'SELECT strategies S1 through S8 - all conditions and cost formulas',
+a:'S1 LINEAR SEARCH on key: cost b/2. S2 BINARY SEARCH on key: sorted file log2(b); unsorted file log2(b)+2b(1+logM(L)) (sort first). S3 PRIMARY INDEX (level t) on KEY or HASH: sorted file t+1; hashed file 1+n/2 (n=overflow blocks). S4 HASH on NON-KEY: 1+n (n=overflow blocks for that value). S5 PRIMARY INDEX on KEY with RANGE (>,>=,<,<=): t+O(b). Estimated: t+P(X>x)*b = t+b*(1-x/r). P(X>x)=fraction of records satisfying range. S6 CLUSTERING INDEX on ordering NON-KEY equality: t+O(b/n). Estimated: t+P(A=x)*b. S7 SECONDARY B+ TREE on non-ordering KEY equality: t+1. S8 SECONDARY B+ TREE on non-ordering NON-KEY equality: t+m+O(b). Refined: t+m+r*sl(A)*(1+1/q). CONJUNCTIVE (AND): use most selective index first, filter intermediate in memory. DISJUNCTIVE (OR): if all attributes have index, use each and union. Else linear scan unavoidable.'},
+
+{u:'QueryProc',q:'Naive join and nested-loop join - algorithm, cost, outer loop rule',
+a:'NAIVE JOIN: compute FULL CARTESIAN PRODUCT R x S, store in temp file T, scan T keeping only r.A=s.B matches. Inefficient - Cartesian is huge. Avoid unless no other option. NESTED-LOOP JOIN ALGORITHM: for each block chunk of outer relation (nB-2 blocks), for each block of inner S, join matching tuples. Memory: nB total = 1 for inner, 1 for output buffer, nB-2 for outer chunks. O1: each outer block read ONCE. O2: entire inner is read once per outer chunk. Outer chunks: ceil(nOuter/(nB-2)). COST FORMULA: nOuter + nInner*ceil(nOuter/(nB-2)). EXAMPLE: nE=2000, nD=10, nB=7. E outer: 2000+10*ceil(2000/5)=2000+4000=6000. D outer: 10+2000*ceil(10/5)=10+4000=4010. Rule: put SMALLER relation in OUTER loop (saves 2000-4010=1990 accesses). Note: naive join cost = nE*nD = 20,000 vs nested-loop best = 4010.'},
+
+{u:'QueryProc',q:'Index-based nested-loop join - algorithm, cost calculation, key lesson',
+a:'ALGORITHM: for each outer tuple r, use index on inner join attribute to directly retrieve matching inner tuples. Index lookup replaces full inner scan. COST: nOuter + rOuter*(index_cost+1). EXAMPLE: SELECT * FROM EMPLOYEE E, DEPARTMENT D WHERE D.Mgr_SSN=E.SSN. B+Tree on Mgr_SSN (xD=2), B+Tree on SSN (xE=4). rE=6000, nE=2000, rD=50, nD=10. STRATEGY 1 (E outer, use Mgr_SSN index to find matching D): nE+rE*(xD+1)=2000+6000*3=20,000. But only 50/6000=0.83% of employees are managers -> 99.17% of searches are wasted! STRATEGY 2 (D outer, use SSN index to find matching E): nD+rD*(xE+1)=10+50*5=260. Every dept has exactly one manager -> 100% fruitful searches! COST: 20,000 vs 260 = 77x difference. KEY LESSON: always use index on PRIMARY KEY side (as inner relation). Not the FK side. EXCEPTION: recursive self-joins (employee-supervisor) where both sides are same table.'},
+
+{u:'QueryProc',q:'Sort-merge join - cost with pre-sorted and non-sorted files',
+a:'PRE-CONDITION: both relations sorted on join attributes. Each file scanned ONCE concurrently (like merging in merge-sort). COST (pre-sorted): nR+nS. EXAMPLE: nE=2000, nD=10 -> 2010 block accesses. IF NOT PRE-SORTED: must sort first using external sort. Sort cost for E (2-way merge, M=2): 2*nE+2*nE*log2(ceil(nE/nB)). Sort cost for D: 2*nD+2*nD*log2(ceil(nD/nB)). EXAMPLE nE=2000, nD=10, nB=7: E sort=2*2000+2*2000*log2(ceil(2000/7))=4000+4000*log2(286)=4000+4000*8.16=36,640. D sort=2*10+2*10*log2(ceil(10/7))=20+20*1=40. Total: 36640+40+2010=38,690. Only 2010/38690=5.1% is the actual join! LESSON: do NOT sort solely for a single join. Only worthwhile if relation sorted for many queries or already sorted by another operation. Best case: both files already sorted on join attribute = just 2010 accesses = very competitive.'},
+
+{u:'QueryProc',q:'Hash join - algorithm, partitioning, probing, and costs',
+a:'PRE-CONDITION: both relations hashed using SAME hash function h on join attributes. PARTITIONING PHASE: for each r in R, compute y=h(r.A), place in bucket y in memory. PROBING PHASE: for each s in S, compute y=h(s.B), find bucket y in memory, check r.A=s.B for all r in bucket, output matches. BEST CASE (smallest fits in memory): requires nB > nD+2 (smallest relation D fits in memory plus 2 buffers). Cost: nE+nD block accesses. Same as sort-merge! NORMAL CASE (smallest cannot fit in memory): 3*(nE+nD). Read+partition both to disk (nE+nD). Write partitions (nE+nD). Read partitions to probe (nE+nD). EXAMPLE nE=2000, nD=10, nB=7: best case? nD=10 > nB-2=5 so nD does NOT fit -> normal case. 3*(2000+10)=6030. DIAGRAM in slides: partitioning phase (M buckets in memory) and probing phase (input buffer for S, hash table for R, output buffer).'},
+
+{u:'QueryProc',q:'Join cost comparison summary and recursive self-join use case II',
+a:'SUMMARY (nE=2000,nD=10,nB=7,xE=4,xD=2,rE=6000,rD=50): Naive=20,000. Nested-loop D outer=4010. Index-based D outer=260. Sort-merge presorted=2010. Hash-join normal=6030. SELF-JOIN USE CASE II: SELECT E.Name, S.Name FROM EMPLOYEE E, EMPLOYEE S WHERE E.Super_SSN=S.SSN. b=2000, r=10000, B+Tree(SSN)=xSSN=5 levels, B+Tree(Super_SSN)=xSuper=2 levels, 10% supervisors. Solution 1 (scan E, use SSN index for S): b+0.9*r*(xSSN+1)=2000+9000*6=56,000. Many employees not supervisors -> wasteful. Solution 2 (scan E, use Super_SSN index): b+0.9*r*(xSuper+1)=2000+9000*3=29,000. Same number of scans but cheaper per lookup. Solution 2 is 48% faster. LESSON: for self-joins, use index with fewer levels. Also consider NULL Super_SSN for non-supervisors (0.9 factor in cost).'},
+
+{u:'QueryProc',q:'Query processing use case I - three strategies with full costs',
+a:'Query: SELECT D.Name, E.Name FROM EMPLOYEE E, DEPARTMENT D WHERE E.Dno=D.Dnumber. Setup: Clustering index on Dno (nC=4 index-blocks, non-key), nE=100, rE=2000, rD=500, nD=10, nB=22, bfrE=20. m=rE/rD=2000/500=4 employees per department. STRATEGY 1 (use clustering index): for each dept, access employees via index. Index search cost: log2(nC)+ceil(m/bfrE)=log2(4)+ceil(4/20)=2+1=3. Total: nD+rD*3=10+500*3=1510 block accesses. STRATEGY 2 (hash-join, dept fits in memory): nD=10 < nB=22 -> dept fits in memory. Partition dept (10 accesses). Probe with each employee block (nE=100 accesses). Total: 10+100=110. STRATEGY 3 (nested-loop, D outer): nD+nE*ceil(nD/(nB-2))=10+100*ceil(10/20)=10+100*1=110. Best: strategies 2 and 3 tie at 110 block accesses.'},
+
+{u:'QueryOpt1',q:'Query optimisation - two approaches and cost function parameters',
+a:'HEURISTIC OPTIMISATION: transform query into equivalent, efficient form using relational algebra rules. Example rule: push selections before joins (sigma before join). Reduces intermediate results. COST-BASED OPTIMISATION: (1) enumerate alternative execution plans. (2) estimate cost of each using statistics. (3) choose minimum cost plan. COST FUNCTION parameters: x1=block accesses, x2=memory requirements, x3=CPU computational cost, x4=network bandwidth. STATISTICS per relation: r (records), R (record size), b (blocks), f (blocking factor), primary file organisation type, index information. STATISTICS per attribute A: NDV(A)=number of distinct values, domain range [min(A),max(A)], type (continuous/discrete), key or non-key, index level t if exists. HISTOGRAMS: approximate P(A=x) for better selectivity estimates. Updated incrementally (Gibbons et al. 2002). More stats -> better estimates -> better plans -> faster queries.'},
+
+{u:'QueryOpt1',q:'Selection selectivity - definition, two prediction methods, special cases',
+a:'DEFINITION: sl(A) is in [0,1] = probability a tuple satisfies a condition on attribute A. sl=0: no tuples. sl=1: all tuples. Selection cardinality: s=r*sl(A). METHOD 1 (histogram, no uniformity assumption): sl(A=x) approximately equals P(A=x) from histogram. Accurate but maintenance overhead. METHOD 2 (uniformity assumption): sl(A=x)=1/NDV(A)=1/n, constant for ALL x. Gain: no histogram. Loss: less accurate. Quote: "the probability of an attribute having uniform distribution is almost zero" (Ioannidis et al. SIGMOD 1996). SPECIAL CASES: KEY attribute: NDV=r -> sl=1/r -> s=1 tuple (only one match by definition). Non-key: NDV=n<r -> sl=1/n -> s=r/n tuples. RANGE selectivity: sl(A>=x)=(max(A)-x)/(max(A)-min(A)) in [0,1]. Example: Salary in [100,10000], sl(Salary>=1000)=(10000-1000)/9900=0.909.'},
+
+{u:'QueryOpt1',q:'Conjunctive, disjunctive selectivity - formulas, assumptions, quiz answers',
+a:'CONJUNCTIVE (AND): sl(A=x AND B=y)=sl(A=x)*sl(B=y). Uses STATISTICAL INDEPENDENCE assumption P(A intersect B)=P(A)*P(B). Example: NDV(Salary)=100, NDV(DNO)=10, r=1000. sl(Salary=40K)=1/100=0.01. sl(DNO=5)=1/10=0.1. sl(A AND B)=0.01*0.1=0.001 -> s=1 tuple only. DISJUNCTIVE (OR): sl(A OR B)=sl(A)+sl(B)-sl(A)*sl(B). Inclusion-exclusion P(A union B)=P(A)+P(B)-P(A)*P(B). Example: sl(DNO=5 OR Salary=40K)=0.1+0.01-0.001=0.109 -> 109 tuples. QUIZ 1: WHERE DNO<>5 -> sl=1-1/n=1-1/10=0.9 -> 900 tuples. QUIZ 2: WHERE DNO=5 AND DNO=3 -> sl=0 (impossible, DNO cannot be both 5 and 3) -> 0 tuples. Note: conjunctive selectivity is ALWAYS <= min(sl(A),sl(B)). Disjunctive selectivity is ALWAYS >= max(sl(A),sl(B)).'},
+
+{u:'QueryOpt1',q:'Cost-selectivity refined formulas - all strategies rewritten with sl',
+a:'BINARY SEARCH (sorted, non-key, equality): log2(b)+ceil(r*sl(A)/f)-1. f=blocking factor. PRIMARY INDEX (level t), KEY RANGE: t+ceil(r*sl(A)/f). CLUSTERING INDEX (level t), NON-KEY EQUALITY: t+ceil(r*sl(A)/f). Fine-grained: t+(r/f)*P(A=x). Note: s=r/n -> ceil(s/f)=ceil(r/(f*n))=r/(n*f) blocks. B+ TREE non-ordering KEY equality: t+1 (independent of sl). B+ TREE non-ordering NON-KEY equality (t levels, m pointer blocks, q pointers/leaf): t+m+r*sl(A)*(1+1/q). HASH KEY equality: 1+O(n_overflow). HASH non-key: 1+n. BLOCK PREDICTION formula: predicted blocks = ceil(s/f) = ceil(r*sl(A)/f). As n=NDV(A) increases: fewer blocks retrieved. With histogram: replace sl(A=x) with P(A=x) from histogram for better accuracy when distribution is skewed.'},
+
+{u:'QueryOpt1',q:'Histograms vs no histograms - full worked accuracy example',
+a:'QUERY: WHERE (AGE<=40 AND AGE>=20) OR DNO=1. r=100, NDV(Age)=40, NDV(DNO)=4, f=5. Age range [20,60], DNO histogram: DNO=1 has 5 emps, DNO=2 has 45 emps, etc. Age histogram: [20,30)=10 emps, [30,40]=20 emps. NO HISTOGRAM case: sl(DNO=1)=1/4=0.25->25 emps. Range sl(Age)=(40-20)/(60-20)=0.5->50 emps. Disjunctive: 0.5+0.25-0.5*0.25=0.625->62.5 emps->ceil(62.5/5)=13 blocks. WITH HISTOGRAM: sl(DNO=1)=5/100=0.05->5 emps. Range sl(Age)=(10+20)/100=0.3->30 emps. Disjunctive: 0.3+0.05-0.3*0.05=0.335->33.5 emps->ceil(33.5/5)=7 blocks. DISCREPANCY: |62.5-33.5|=29 tuples -> 85% inaccuracy without histogram! Cost difference: 13 vs 7 blocks -> wrong strategy might be chosen. LESSON: histograms DRAMATICALLY improve selectivity estimation, especially for skewed distributions. Cost: maintenance overhead but worth it for frequently-queried attributes.'},
+
+{u:'QueryOpt1',q:'Selection optimisation use case I - P0 through P3 with all costs',
+a:'SETUP: Employee r=10000, b=2000, f=5. Clustering(Salary,xSalary=3): sl=0.002, s=20 tuples/salary. B+Tree(Dno,xDno=2): NDV=125, sDno=80 emp/dept, sl=0.008. B+Tree(EXP,xEXP=2): NDV=2, sEXP=5000, sl=0.5. QUERY: WHERE Dno=5 AND Salary=30000 AND EXP=0. Memory=100 blocks. P0 Linear scan: b=2000 block accesses. P1 Dno B+Tree: xDno+1+sDno=2+1+80=83. Intermediate: 80 tuples=16 blocks (fits in 100-block memory!). Apply remaining conditions in memory. P1 cost=83. P2 Salary clustering index: xSalary+ceil(s/f)=3+ceil(20/5)=3+4=7. Intermediate: 20 tuples=4 blocks (fits easily!). Apply DNO=5 and EXP=0 in memory. P2 cost=7. P3 EXP B+Tree: xEXP+1+sEXP=2+1+5000=5003. Intermediate: 5000 tuples=1000 blocks. Memory only has 100 blocks -> write 900 blocks overflow to disk. P3 cost >> 5003. RANKING: P2=7 (BEST), P1=83, P0=2000, P3 catastrophic.'},
+
+{u:'QueryOpt2',q:'Join selectivity theorem - definition, formula, proof sketch, examples',
+a:'JOIN SELECTIVITY: js = |R join S| / |R x S| where |R x S| = |R|*|S| (Cartesian cardinality). JOIN CARDINALITY: jc = js * |R| * |S|. THEOREM 1: js = 1/max(NDV(A,R), NDV(B,S)) where A,B are join attributes. Therefore: jc = (|R|*|S|) / max(NDV(A,R), NDV(B,S)). PROOF SKETCH: each S tuple matches |R|/NDV(A,R) R-tuples on average (by uniformity). Total matches = |S|*|R|/NDV(A,R). Symmetrically |R|*|S|/NDV(B,S). Take min -> 1/max(NDV,NDV). SPECIAL CASE: if B is PK in S -> NDV(B,S)=|S| -> jc=|R|*|S|/|S|=|R| (each R tuple joins exactly 1 S tuple). EXAMPLE (slides): EMPLOYEE join DEPENDENT on ESSN=SSN. NDV(SSN,E)=2000, NDV(E_SSN,P)=3, |E|=2000, |P|=5. js=1/max(2000,3)=1/2000. jc=0.0005*2000*5=5 matching tuples (expected). RESULT BLOCKS: k=jc/fRS (must include in all refined cost formulas).'},
+
+{u:'QueryOpt2',q:'Cartesian vs join - visual examples from slides',
+a:'EXAMPLE 1: EMPLOYEE(5 tuples) join DEPARTMENT(3 tuples) on E.Dno=D.Dnumber. Cartesian: 5*3=15 concatenated tuples. All employees paired with all departments. Join on Dno=Dnumber: only 5 matching tuples survive (each employee with their own dept). js=5/15=0.333. jc=5. EXAMPLE 2: Same tables, join on E.SSN=D.Mgr_SSN. Only MANAGERS match. Result: 3 tuples (one per department). js=3/15=0.2. jc=3. INTERPRETATION: join selectivity = probability of a random Cartesian pair actually matching. Low js = highly selective = good, reduces intermediate results. IMPLICATION: start with the join that has the LOWEST js (most selective) to minimise intermediate result size. This is the key insight behind join ordering optimisation. NDV determines js: higher NDV -> lower js -> more selective join.'},
+
+{u:'QueryOpt2',q:'Refined join cost formulas - all strategies with result blocks',
+a:'Always include result blocks k=jc/fRS in cost. NESTED-LOOP (D outer): bD+ceil(bD/(nB-2))*bE+k. INDEX-BASED, Primary Index on PK (level t): bOuter+rOuter*(t+1)+k. INDEX-BASED, Clustering Index (level xE, sel. cardinality sE, bfr fE): bD+rD*(xE+ceil(sE/fE))+k. INDEX-BASED, B+ Tree non-key (level xE, y pointer blocks, sel. cardinality sE): bD+rD*(xE+y+sE)+k. Note for B+Tree non-key: sE=1/NDV(DNO)*|E| and each record potentially in different block. SORT-MERGE (pre-sorted): bR+bS+k. HASH-JOIN normal: 3*(bR+bS)+k. WORKED jc EXAMPLE: E.SSN=D.Mgr_SSN, NDV(SSN,E)=|E|=2000, NDV(Mgr_SSN,D)=50. js=1/max(2000,50)=1/2000=0.0005. jc=0.0005*2000*50=50 matching tuples. k=50/fRS.'},
+
+{u:'QueryOpt2',q:'Join optimisation use case I - four strategies with full costs',
+a:'QUERY: SELECT * FROM EMPLOYEE E, DEPARTMENT D WHERE E.Dno=D.Dnumber. rE=10000, bE=2000, rD=125, bD=13, fRS=4, nB=10. NDV(Dno)=NDV(Dnumber)=125. js=1/125=0.008. jc=js*10000*125=10000. k=10000/4=2500 result blocks. NESTED-LOOP (D outer): 13+ceil(13/8)*2000+2500=13+2*2000+2500=6513. PRIMARY INDEX on Dnumber (xDnumber=1, file sorted by Dnumber): bE+rE*(1+1)+k=2000+10000*2+2500=24500. Very expensive because E is outer and not selective. B+ TREE on Dno (xDno=2, 1 ptr block/dept, sDno=80): bD+rD*(xDno+80+1)+k=13+125*83+2500=12888. HASH-JOIN: 3*(13+2000)+2500=8539. SORT-MERGE: CANNOT use (Dno/Dnumber not a sorting attribute for the files). BEST: NESTED-LOOP with D as outer = 6513. Note: all include 2500 result blocks in cost. This dominates for large join results.'},
+
+{u:'QueryOpt2',q:'3-way join optimisation - two complete plans with costs',
+a:'QUERY: SELECT * FROM EMPLOYEE E, DEPARTMENT D, DEPENDENT T WHERE T.ESSN=E.SSN AND E.SSN=D.MGR_SSN. rT=50,bT=3. Clustering(E_SSN,xE_SSN=2,NDV=10,sE_SSN=5). rD=125,bD=13. Primary(MGR_SSN,xMGR=1). rE=10000,bE=2000. B+Tree(SSN,xSSN=4). f=10,fRS=2,nB=100. PLAN 1 (T+E first, then ED+D): T with E using B+Tree(SSN): bT+rT*(xSSN+1)+k1=3+50*5+25/2=278. jc_TE=1/max(10000,10)*10000*50=50. bET=ceil(50/2)=25 (fits in 100-block memory). T+E+D using Primary(MGR_SSN): rET*(xMGR+1)=50*2=100 (ET in memory, not read). jc_ETD=1/max(10000,125)*50*125=0.625->1 block (negligible). PLAN 1 TOTAL=278+100=378. PLAN 2 (D+E first, then DE+T): D with E using B+Tree(SSN): bD+rD*(xSSN+1)+k2=13+125*5+63=701. jc_DE=1/max(10000,125)*10000*125=125. bED=ceil(125/2)=63 (fits). DE+T using Clustering(E_SSN): rED*(xE_SSN+ceil(5/10))=125*(2+1)=375. PLAN 2 TOTAL=701+375=1076. PLAN 1 wins by 2.84x. REASON: T(50 tuples) is smaller intermediate than D(125 depts) -> start with smallest join.'},
+
+{u:'QueryOpt2',q:'Holistic optimisation - select first then join, two full plans',
+a:'QUERY: SELECT * FROM EMPLOYEE, DEPARTMENT WHERE Salary=1000 AND SSN=MGR_SSN. Clustering(Salary,x=3): NDV=500, s=20/salary. B+Tree(SSN,x=4). Primary(MGR_SSN,x=1). rE=10000,bE=2000. rD=125,bD=13. f=10,fRS=2,nB=100. PLAN 1 (select first, then join): P1.1 Salary=1000 via Clustering: xSalary+ceil(s/f)=3+ceil(20/10)=3+2=5 accesses. Intermediate: 20 tuples=2 blocks (in memory). P1.2 join filtered employees (in memory) with D via Primary(MGR_SSN): rFE*(xMGR+1)=20*2=40. jc_F=1/max(10000,125)*20*125=0.25 matching tuples -> negligible k. PLAN 1 TOTAL=5+40=45 block accesses. PLAN 2 (join first, then select): P2.1 join via B+Tree(SSN): bD+rD*(xSSN+1)+k=13+125*5+63=701. Intermediate: 125 managers, 63 blocks in memory. P2.2 filter Salary=1000: 0.25 matching tuples (same result as Plan 1!). PLAN 2 TOTAL=701. RATIO: 701/45=15.6x worse. LESSON: intermediate in Plan 1 is 20 tuples vs 125 in Plan 2. Push selections BEFORE joins. This is the main heuristic in query optimisation.'},
+
+{u:'QueryOpt2',q:'Optimisation use case II - disjunctive query with OR and memory filtering loops',
+a:'QUERY: SELECT * FROM EMPLOYEE WHERE Dno=5 OR (Salary>=500 AND EXP=0). Memory=1100 blocks. b=2000. SELECTIVITIES: sl(Salary>=500)=(10000-500)/9900=0.959. sl(EXP=0)=0.5. Conjunctive sl=0.4795. sl(DNO=5)=0.008. Disjunctive total=0.4836 -> 4836.6 emp -> ideal=968 blocks. Condition 1 (DNO=5 via B+Tree): 83 accesses, 80 tuples=16 blocks in memory. Condition 2 option A (EXP=0 first via B+Tree then Salary filter): 5003 accesses, 5000 tuples=1000 blocks -> 1100-16=1084 free -> FITS! Total A: 83+5003=5086. Condition 2 option B (Salary>=500 via Clustering first then EXP filter): 1921 accesses, 9590 tuples=1918 blocks > available 1084 -> must write 834 blocks to disk. Loop 1: filter 1084, free 542, read 542 more. Loop 2: filter 542, read 271. Loop 3: read 21. Total B: 83+1921+834+542+271+21=3672. ALL worse than linear scan (2000)! With MORE memory (2000 blocks): Plan B cost=83+1921=2004 approx linear scan. LESSON: OR queries with large selectivity are hard; memory matters enormously.'},
+
+{u:'QueryOpt2',q:'HyperLogLog, Count Distinct Problem, and NeuroCard',
+a:'JOIN COST FORMULAS require NDV(A,R) = number of distinct values of attribute A in relation R. Computing NDV exactly requires full scan: O(r) time and O(r) memory -> does NOT scale for huge r. THE COUNT DISTINCT PROBLEM: estimate NDV efficiently. Hash-based method: O(r) - does not scale as r approaches infinity. HYPERLOGLOG (Heule et al., Google, EDBT 2013): complexity O(log(log r)+log r). Uses probabilistic data structures (hash functions + bit patterns) to estimate cardinality with small error and tiny memory (a few KB). Now used in Google BigQuery for cardinality estimation in the query planner. Paper: "HyperLogLog in practice: algorithmic engineering of a state-of-the-art cardinality estimation algorithm." NEUROCARD (Yang et al., VLDB 2020): neural network cardinality estimator for multiple tables. Uses deep unsupervised learning. "One cardinality estimator for all tables." Represents modern trend: ML-based query optimisation. The optimizer needs NDV estimates "extremely fast" to be useful at query planning time.'},
+
+];
+
+let activeUnit='all', deck=[...ALL_CARDS], idx=0, flipped=false, touchStartX=0;
+
+function unitLabel(id){return(UNITS.find(u=>u.id===id)||{}).label||id;}
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+function updateCounter(){
+  const el=document.getElementById('topCounter');
+  if(el&&deck.length)el.innerHTML='<span>'+(idx+1)+'</span> / '+deck.length;
+}
+
+function renderCard(dir){
+  const card=deck[idx];
+  document.getElementById('main').innerHTML=
+    '<div class="progress-bar"><div class="progress-fill" style="width:'+((idx+1)/deck.length*100)+'%"></div></div>'+
+    '<div class="card-scene" id="cardScene">'+
+    '<div class="card'+(flipped?' flipped':'')+'" id="theCard">'+
+    '<div class="card-face card-front">'+
+    '<div class="card-header"><div class="card-type">Topic</div><div class="card-unit">'+esc(unitLabel(card.u))+'</div></div>'+
+    '<div class="card-body"><div class="card-text">'+esc(card.q)+'</div></div>'+
+    '<div class="card-mark">Q</div>'+
+    '<div class="card-hint">tap card &middot; press flip &middot; swipe</div>'+
+    '</div>'+
+    '<div class="card-face card-back">'+
+    '<div class="card-header"><div class="card-type">Detail</div><div class="card-unit">'+esc(unitLabel(card.u))+'</div></div>'+
+    '<div class="card-body"><div class="card-text">'+esc(card.a)+'</div></div>'+
+    '<div class="card-mark">A</div>'+
+    '</div></div></div>'+
+    '<div class="nav">'+
+    '<button class="nav-btn" id="prevBtn">&#8592;</button>'+
+    '<button class="flip-btn" id="flipBtn">'+(flipped?'unflip':'flip')+'</button>'+
+    '<button class="nav-btn" id="nextBtn">&#8594;</button>'+
+    '</div>'+
+    '<div class="swipe-hint">&#8592; &#8594; arrow keys &middot; space to flip</div>';
+
+  updateCounter();
+
+  if(dir){
+    const s=document.getElementById('cardScene');
+    s.classList.add(dir===1?'slide-right':'slide-left');
+    setTimeout(function(){s.classList.remove('slide-right','slide-left');},300);
+  }
+
+  document.getElementById('theCard').addEventListener('click',toggleFlip);
+  document.getElementById('flipBtn').addEventListener('click',toggleFlip);
+  document.getElementById('prevBtn').addEventListener('click',function(){navigate(-1);});
+  document.getElementById('nextBtn').addEventListener('click',function(){navigate(1);});
+
+  const sc=document.getElementById('cardScene');
+  sc.addEventListener('touchstart',function(e){touchStartX=e.touches[0].clientX;},{passive:true});
+  sc.addEventListener('touchend',function(e){const dx=touchStartX-e.changedTouches[0].clientX;if(Math.abs(dx)>50)navigate(dx>0?1:-1);});
+}
+
+function toggleFlip(){
+  flipped=!flipped;
+  const c=document.getElementById('theCard');
+  if(c)c.classList.toggle('flipped',flipped);
+  const b=document.getElementById('flipBtn');
+  if(b)b.textContent=flipped?'unflip':'flip';
+}
+
+function navigate(dir){idx=((idx+dir)+deck.length)%deck.length;flipped=false;renderCard(dir);}
+
+function renderUnitStrip(){
+  const strip=document.getElementById('unitStrip');
+  strip.innerHTML=UNITS.map(function(u){return '<button class="unit-tab'+(u.id===activeUnit?' active':'')+'" data-id="'+u.id+'">'+u.label+'</button>';}).join('');
+  strip.querySelectorAll('.unit-tab').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      activeUnit=btn.dataset.id;
+      deck=activeUnit==='all'?ALL_CARDS.slice():ALL_CARDS.filter(function(c){return c.u===activeUnit;});
+      idx=0;flipped=false;
+      strip.querySelectorAll('.unit-tab').forEach(function(b){b.classList.remove('active');});
+      btn.classList.add('active');
+      renderCard(null);
+    });
+  });
+}
+
+document.addEventListener('keydown',function(e){
+  if(e.key==='ArrowRight')navigate(1);
+  else if(e.key==='ArrowLeft')navigate(-1);
+  else if(e.key===' '||e.key==='Enter'){e.preventDefault();toggleFlip();}
+});
+
+renderUnitStrip();
+renderCard(null);
+</script>
+</body>
+</html>
